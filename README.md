@@ -1,7 +1,7 @@
 # LangControl
 
 LangControl is a language learning web app that uses flashcards to help you learn new vocabulary.
-It was developed out of a need to make flashcards a lot less boring and more relevant to real life.
+It was developed out of a need to make flashcards a lot less boring than they usually are and more relevant to real life.
 It puts simplicity and ease of use at the forefront.
 
 ## Main features
@@ -9,6 +9,7 @@ It puts simplicity and ease of use at the forefront.
 * Automatic translations
 * AI-generated example sentences
 * "Zen mode"
+* Spaced repetition
 * Much more to come...
 
 ## Technologies used
