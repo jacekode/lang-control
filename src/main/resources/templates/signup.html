@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <div th:replace="~{fragments/basic :: head-contents}"></div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+  </head>
+  
+  <body>
+    <div th:replace="~{fragments/basic :: navbar}"></div>
+
+    <div class="container">
+      <div class="row justify-content-center align-items-center vh-100">
+        <div class="col col-sm-11 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+
+          <div class="border border-3 border-primary-subtle rounded-4 p-4">
+            <h2 class="text-center mb-4">Sign up</h2>
+            <form th:action="@{/signup}" action="#" method="post" th:object="${registrationData}">
+              <div class="form-floating mb-4">
+                <input id="name-input" type="text" class="form-control" name="name" placeholder="Your name" pattern="^[a-zA-Z]*$" maxlength="50" required autofocus>
+                <label for="name-input" class="form-label">Enter your name</label>
+                <div id="name-info" class="form-text">(It may only contain letters.)</div>
+              </div>
+              <div class="form-floating mb-4">
+                <input id="username-input" type="text" class="form-control" name="username" placeholder="Username" aria-describedby="username-info username-taken-info" 
+                  pattern="^(?!\w*_{2,})\w*$" minlength="2" maxlength="30" required>
+                <label for="username-input" class="form-label">Choose a username</label>
+                <div id="username-info" class="form-text">
+                  <div>You can always change it later.</div>
+                  <div>(It may only consist of letters, digits and underscores but not two underscores next to each other.)</div>
+                </div>
+                <div th:if="${usernameTaken}" id="username-taken-info" class="text-danger">This username is already taken.</div>
+              </div>
+              <div class="form-floating mb-4">
+                <input id="pwd" type="password" class="form-control" name="password" placeholder="Password" aria-describedby="password-info" minlength="8" maxlength="50" required 
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$">
+                <label for="pwd" class="form-label">Choose a password</label>
+                <div id="password-info" class="form-text">
+                  <div>The password should have:</div>
+                  <ul>
+                    <li>a length of between 8 and 50 characters</li>
+                    <li>at least one lowercase letter</li>
+                    <li>at least one uppercase letter</li>
+                    <li>at least one digit</li>
+                    <li>at least one special symbol</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary">Sign up</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
+      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  </body>
+</html>
