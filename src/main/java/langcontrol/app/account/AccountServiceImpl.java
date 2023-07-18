@@ -51,8 +51,15 @@ public class AccountServiceImpl implements AccountService {
             throw new UsernameAlreadyExistsException("The account with the given username already exists.");
         }
 
-        Role userRole = roleRepository.findByValue(DefinedRoleValue.USER.getValue())
-                .orElse(roleRepository.save(new Role(null, DefinedRoleValue.USER)));
+        Optional<Role> roleOptional = roleRepository.findByValue(DefinedRoleValue.USER.getValue());
+        Role userRole;
+        if (roleOptional.isEmpty()) {
+            Role newUserRole = new Role(null, DefinedRoleValue.USER);
+            userRole = roleRepository.save(newUserRole);
+        } else {
+            userRole = roleOptional.get();
+        }
+
         List<Role> roles = List.of(userRole);
 
         Account accountToCreate = new Account(
