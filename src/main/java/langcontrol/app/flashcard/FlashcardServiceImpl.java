@@ -8,7 +8,7 @@ import langcontrol.app.exception.GeneralNotFoundException;
 import langcontrol.app.flashcard.rest.FlashcardForecastsDTO;
 import langcontrol.app.flashcard.rest.LearnModeForecastsDTO;
 import langcontrol.app.flashcard.rest.ReviewModeForecastsDTO;
-import langcontrol.app.generator.openai.OpenAiDictionary;
+import langcontrol.app.generator.Dictionary;
 import langcontrol.app.util.PrincipalRetriever;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,11 +29,11 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     private final FlashcardRepository flashcardRepository;
     private final DeckRepository deckRepository;
-    private final OpenAiDictionary dictionary;
+    private final Dictionary dictionary;
 
     @Autowired
     public FlashcardServiceImpl(FlashcardRepository flashcardRepository, DeckRepository deckRepository,
-                                @Qualifier("openAiDictionary") OpenAiDictionary dictionary) {
+                                @Qualifier("openAiDictionary") Dictionary dictionary) {
         this.flashcardRepository = flashcardRepository;
         this.deckRepository = deckRepository;
         this.dictionary = dictionary;
