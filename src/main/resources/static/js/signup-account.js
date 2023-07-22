@@ -1,4 +1,4 @@
-document.querySelector("form").addEventListener("submit", (event) => {
+document.getElementById("signup-form").addEventListener("submit", (event) => {
     event.preventDefault()
     const validInputValues = checkSignupValidity()
     if (validInputValues) {
@@ -6,8 +6,6 @@ document.querySelector("form").addEventListener("submit", (event) => {
     } else {
         /// Show message that input values are not correct
     }
-
-
 })
 function checkSignupValidity() {
     const firstName = document.getElementById("name-input")
@@ -25,5 +23,4 @@ function checkSignupValidity() {
             repeatPassword: repeatPassword.value
         }
     }
-
 }
