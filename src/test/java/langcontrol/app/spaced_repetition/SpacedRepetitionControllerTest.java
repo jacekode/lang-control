@@ -1,5 +1,6 @@
 package langcontrol.app.spaced_repetition;
 
+import langcontrol.app.deck.Deck;
 import langcontrol.app.deck.LanguageCode;
 import langcontrol.app.flashcard.Flashcard;
 import langcontrol.app.flashcard.FlashcardService;
@@ -52,63 +53,79 @@ class SpacedRepetitionControllerTest {
     }
 
     public static ArrayDeque<Flashcard> threeElementFlashcardArrayDequeFirstInLearnMode() {
+        Deck testDeck = new Deck(54L, "test deck", null,
+                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+
         Flashcard card1 = Flashcard.inInitialLearnModeState()
                 .front("front 1")
                 .back("back 1")
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.GERMAN)
-                .deck(null)
+                .deck(testDeck)
                 .build();
         Flashcard card2 = Flashcard.inInitialReviewModeState()
                 .front("front 2")
                 .back("back 2")
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.SPANISH)
-                .deck(null)
+                .deck(testDeck)
                 .build();
         Flashcard card3 = Flashcard.inInitialReviewModeState()
                 .front("front 3")
                 .back("back 3")
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.ENGLISH)
-                .deck(null)
+                .deck(testDeck)
                 .build();
+        testDeck.getFlashcards().add(card1);
+        testDeck.getFlashcards().add(card2);
+        testDeck.getFlashcards().add(card3);
         return new ArrayDeque<>(List.of(card1, card2, card3));
     }
 
     public static ArrayDeque<Flashcard> threeElementFlashcardArrayDequeFirstInReviewMode() {
+        Deck testDeck = new Deck(54L, "test deck", null,
+                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+
         Flashcard card1 = Flashcard.inInitialReviewModeState()
                 .front("front 1")
                 .back("back 1")
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.SPANISH)
-                .deck(null)
+                .deck(testDeck)
                 .build();
         Flashcard card2 = Flashcard.inInitialLearnModeState()
                 .front("front 2")
                 .back("back 2")
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.GERMAN)
-                .deck(null)
+                .deck(testDeck)
                 .build();
         Flashcard card3 = Flashcard.inInitialReviewModeState()
                 .front("front 3")
                 .back("back 3")
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.ENGLISH)
-                .deck(null)
+                .deck(testDeck)
                 .build();
+        testDeck.getFlashcards().add(card1);
+        testDeck.getFlashcards().add(card2);
+        testDeck.getFlashcards().add(card3);
         return new ArrayDeque<>(List.of(card1, card2, card3));
     }
 
     public static ArrayDeque<Flashcard> oneElementFlashcardArrayDeque() {
+        Deck testDeck = new Deck(54L, "test deck", null,
+                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+
         Flashcard card3 = Flashcard.inInitialReviewModeState()
                 .front("front 1")
                 .back("back 1")
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.ENGLISH)
-                .deck(null)
+                .deck(testDeck)
                 .build();
+        testDeck.getFlashcards().add(card3);
         return new ArrayDeque<>(List.of(card3));
     }
 
@@ -123,7 +140,7 @@ class SpacedRepetitionControllerTest {
     }
 
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void openDeck_ShouldRedirectToDecksPage_WhenReadyForReviewResultIsEmpty() throws Exception {
         // given
@@ -146,7 +163,7 @@ class SpacedRepetitionControllerTest {
     }
 
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @ParameterizedTest
     @CsvSource(value = {
             "0,Europe/Warsaw",
@@ -162,30 +179,39 @@ class SpacedRepetitionControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void openDeck_ShouldDisplayLearnPage_WhenTheFirstReadyForReviewCardIsInLearnMode() throws Exception {
         // given
         long deckId = 23L;
         String timezoneId = "America/Los_Angeles";
         int limit = 10;
+        Deck testDeck = new Deck(34L, "test deck", null,
+                LanguageCode.SPANISH, LanguageCode.BULGARIAN, new ArrayList<>());
         Flashcard cardLearnMode = Flashcard.inInitialLearnModeState()
                 .front("learn front 1")
                 .back("learn back 1")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.SPANISH).build();
         cardLearnMode.setId(7L);
         Flashcard cardReviewMode1 = Flashcard.inInitialReviewModeState()
                 .front("review front 1")
                 .back("review back 1")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.GERMAN).build();
         cardReviewMode1.setId(36L);
         Flashcard cardReviewMode2 = Flashcard.inInitialReviewModeState()
                 .front("review front 2")
                 .back("review back 2")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.ENGLISH).build();
+        testDeck.getFlashcards().add(cardLearnMode);
+        testDeck.getFlashcards().add(cardReviewMode1);
+        testDeck.getFlashcards().add(cardReviewMode2);
+
         LocalDateTime lastReview = LocalDateTime
                 .of(2023, 3, 14, 16, 37, 21);
         cardReviewMode2.setLastReviewInUTC(lastReview);
@@ -203,7 +229,7 @@ class SpacedRepetitionControllerTest {
                         .param("deckId", String.valueOf(deckId))
                         .param("timezone", timezoneId))
                 .andExpect(status().isOk())
-                .andExpect(view().name("deck-learn-page"))
+                .andExpect(view().name("learn"))
                 .andExpect(model().attribute("currentCard",
                         hasProperty("id", equalTo(7L))))
                 .andExpect(model().attribute("reviewCards", hasSize(3)))
@@ -219,30 +245,39 @@ class SpacedRepetitionControllerTest {
                 .fetchReadyForReviewShuffledWithLimit(deckId, timezoneId, limit);
     }
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void openDeck_ShouldDisplayReviewPage_WhenTheFirstReadyForReviewCardIsInReviewMode() throws Exception {
         // given
         long deckId = 23L;
         String timezoneId = "America/Los_Angeles";
         int limit = 10;
+        Deck testDeck = new Deck(34L, "test deck", null,
+                LanguageCode.SPANISH, LanguageCode.BULGARIAN, new ArrayList<>());
         Flashcard cardLearnMode = Flashcard.inInitialLearnModeState()
                 .front("learn front 1")
                 .back("learn back 1")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.ENGLISH)
                 .targetLanguage(LanguageCode.SPANISH).build();
         cardLearnMode.setId(7L);
         Flashcard cardReviewMode1 = Flashcard.inInitialReviewModeState()
                 .front("review front 1")
                 .back("review back 1")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.GERMAN).build();
         cardReviewMode1.setId(36L);
         Flashcard cardReviewMode2 = Flashcard.inInitialReviewModeState()
                 .front("review front 2")
                 .back("review back 2")
+                .deck(testDeck)
                 .sourceLanguage(LanguageCode.SPANISH)
                 .targetLanguage(LanguageCode.ENGLISH).build();
+        testDeck.getFlashcards().add(cardLearnMode);
+        testDeck.getFlashcards().add(cardReviewMode1);
+        testDeck.getFlashcards().add(cardReviewMode2);
+
         LocalDateTime lastReview = LocalDateTime
                 .of(2023, 3, 14, 16, 37, 21);
         cardReviewMode2.setLastReviewInUTC(lastReview);
@@ -260,7 +295,7 @@ class SpacedRepetitionControllerTest {
                         .param("deckId", String.valueOf(deckId))
                         .param("timezone", timezoneId))
                 .andExpect(status().isOk())
-                .andExpect(view().name("deck-review-page"))
+                .andExpect(view().name("review"))
                 .andExpect(model().attribute("currentCard",
                         hasProperty("id", equalTo(86L))
                 ))
@@ -277,78 +312,7 @@ class SpacedRepetitionControllerTest {
                 .fetchReadyForReviewShuffledWithLimit(deckId, timezoneId, limit);
     }
 
-    @WithMockUser(username = "user@email.com")
-    @ParameterizedTest
-    @MethodSource("invalidHandleFlashcardRatingMethodParams")
-    void handleFlashcardRating_ShouldReturnBadRequestStatusCode_WhenParametersAreInvalid(
-            FlashcardRatingDTO invalidRatingDto, Deque<Flashcard> invalidCardDeque) throws Exception {
-        mockMvc.perform(post("/review")
-                        .with(csrf())
-                        .flashAttr("rating", invalidRatingDto)
-                        .flashAttr("reviewCards", invalidCardDeque))
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithMockUser(username = "user@email.com")
-    @ParameterizedTest
-    @MethodSource("invalidHandleFlashcardRatingMethodParams")
-    void handleFlashcardRating_ShouldReturnBadRequestStatusCode_WhenParameterIsNull(
-            FlashcardRatingDTO invalidRatingDto, Deque<Flashcard> invalidCardDeque) throws Exception {
-        FlashcardRatingDTO ratingDTO = new FlashcardRatingDTO(RatingType.LEARN_NEXT, 2L);
-
-        mockMvc.perform(post("/review")
-                        .with(csrf())
-                        .flashAttr("rating", ratingDTO))
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithMockUser(username = "user@email.com")
-    @Test
-    void handleFlashcardRating_ShouldHandleRatingAndRemoveTheTopCardFromDeque_WhenParametersAreValid() throws Exception {
-        // given
-        FlashcardRatingDTO ratingDto = new FlashcardRatingDTO(RatingType.LEARN_NEXT, 2L);
-        Deque<Flashcard> readyForReviewCardsDeque = threeElementFlashcardArrayDequeFirstInLearnMode();
-        Deque<Flashcard> expectedCardsForReviewDeque = new ArrayDeque<>(readyForReviewCardsDeque);
-        expectedCardsForReviewDeque.poll();
-
-        // when
-        mockMvc.perform(post("/review")
-                        .with(csrf())
-                        .flashAttr("rating", ratingDto)
-                        .flashAttr("reviewCards", readyForReviewCardsDeque))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/review/next"))
-                .andExpect(flash().attribute("reviewCards", hasSize(expectedCardsForReviewDeque.size())));
-
-        // then
-        then(mockedSpacedRepetitionService).should(times(1))
-                .applyRating(ratingDto.getFlashcardId(), ratingDto.getRatingType());
-        assertEquals(expectedCardsForReviewDeque.element().getFront(), readyForReviewCardsDeque.element().getFront());
-        assertEquals(expectedCardsForReviewDeque.size(), readyForReviewCardsDeque.size());
-    }
-
-    @WithMockUser(username = "user@email.com")
-    @Test
-    void handleFlashcardRating_ShouldRedirectToMainDecksPage_WhenTheLastCardIsRated() throws Exception {
-        // given
-        FlashcardRatingDTO ratingDto = new FlashcardRatingDTO(RatingType.LEARN_NEXT, 2L);
-        Deque<Flashcard> readyForReviewCardsOneElemDeque = oneElementFlashcardArrayDeque();
-
-        // when
-        mockMvc.perform(post("/review")
-                        .with(csrf())
-                        .flashAttr("rating", ratingDto)
-                        .flashAttr("reviewCards", readyForReviewCardsOneElemDeque))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/decks"));
-
-        // then
-        then(mockedSpacedRepetitionService).should(times(1))
-                .applyRating(ratingDto.getFlashcardId(), ratingDto.getRatingType());
-        assertTrue(readyForReviewCardsOneElemDeque.isEmpty());
-    }
-
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void reviewNextCard_ShouldDisplayLearnPage_WhenTheTopReadyForReviewCardIsInLearnMode() throws Exception {
         // given
@@ -358,13 +322,13 @@ class SpacedRepetitionControllerTest {
         mockMvc.perform(get("/review/next")
                         .flashAttr("reviewCards", readyForReviewCardsDeque))
         // then
-                .andExpect(view().name("deck-learn-page"))
+                .andExpect(view().name("learn"))
                 .andExpect(model().attribute("reviewCards", readyForReviewCardsDeque))
                 .andExpect(model().attribute("currentCard", readyForReviewCardsDeque.element()))
                 .andExpect(model().attribute("rating", instanceOf(FlashcardRatingDTO.class)));
     }
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void reviewNextCard_ShouldDisplayReviewPage_WhenTheTopReadyForReviewCardIsInReviewMode() throws Exception {
         // given
@@ -374,13 +338,13 @@ class SpacedRepetitionControllerTest {
         mockMvc.perform(get("/review/next")
                         .flashAttr("reviewCards", readyForReviewCardsDeque))
         // then
-                .andExpect(view().name("deck-review-page"))
+                .andExpect(view().name("review"))
                 .andExpect(model().attribute("reviewCards", readyForReviewCardsDeque))
                 .andExpect(model().attribute("currentCard", readyForReviewCardsDeque.element()))
                 .andExpect(model().attribute("rating", instanceOf(FlashcardRatingDTO.class)));
     }
 
-    @WithMockUser(username = "user@email.com")
+    @WithMockUser(username = "username")
     @Test
     void reviewNextCard_ShouldRedirectToMainDecksPage_WhenReadyForReviewCardsDequeIsEmpty() throws Exception {
         // given

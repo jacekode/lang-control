@@ -43,7 +43,7 @@ class PrincipalRetrieverTest {
     @Test
     void retrieveAccount_ShouldReturnAccount_WhenAuthenticationIsNotNull() {
         // given
-        Account retrievedAccount = null;
+        Account retrievedAccount;
         Account testAccount = new Account(17L,
                 "test@example.com",
                 "78oytAb$HEby7o",

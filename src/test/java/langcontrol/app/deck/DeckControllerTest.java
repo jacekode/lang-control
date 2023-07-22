@@ -41,12 +41,12 @@ class DeckControllerTest {
     private ArgumentCaptor<Deck> deckArgCaptor;
 
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
-    void getCreateDeckPage_ShouldReturnDeckCreatePage() throws Exception {
-        mockMvc.perform(get("/create-deck"))
+    void getCreateDeckPage_ShouldReturnAddDeckPage() throws Exception {
+        mockMvc.perform(get("/add-deck"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("deck-create-page"))
+                .andExpect(view().name("add-deck"))
                 .andExpect(model().attribute("deckToCreate", instanceOf(Deck.class)))
                 .andExpect(model().attribute("languageCodes", LanguageCode.values()));
     }
@@ -58,7 +58,7 @@ class DeckControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void createDeck_ShouldCreateNewDeckAndRedirectToDeckCreationPage() throws Exception {
         // given
@@ -67,11 +67,11 @@ class DeckControllerTest {
         Mockito.doNothing().when(mockedDeckService).createNewDeck(Mockito.any(Deck.class));
 
         // when
-        mockMvc.perform(post("/create-deck")
+        mockMvc.perform(post("/add-deck")
                         .with(csrf())
                 .flashAttr("deckToCreate", deckDto))
                 .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/create-deck"));
+                .andExpect(redirectedUrl("/add-deck"));
 
         // then
         then(mockedDeckService).should(times(1)).createNewDeck(deckArgCaptor.capture());
@@ -96,7 +96,7 @@ class DeckControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void getShowDecksPage_ShouldReturnPageWithAllDecks() throws Exception {
         // given
@@ -109,7 +109,7 @@ class DeckControllerTest {
         mockMvc.perform(get("/decks"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("decks", deckViewList))
-                .andExpect(view().name("deck-show-all-page"));
+                .andExpect(view().name("all-decks"));
 
         then(mockedDeckService).should().getAllDecks();
     }
@@ -121,99 +121,7 @@ class DeckControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-   /* @WithMockUser(username = "test@example.com")
-    @Test
-    void getAddCardToDeckPage_ShouldReturnAddCardPage() throws Exception {
-        // given
-        long testDeckId = 94L;
-        Deck testDeck = new Deck(testDeckId, "Test Deck", null, LanguageCode.ENGLISH,
-                LanguageCode.GERMAN, new ArrayList<>());
-        given(mockedDeckService.getDeckById(testDeckId)).willReturn(testDeck);
-
-        // when
-        mockMvc.perform(get(String.format("/deck/%d/add", testDeckId)))
-
-                // then
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("deck", testDeck))
-                .andExpect(model().attribute("newFlashcard", instanceOf(FlashcardCreationDTO.class)))
-                .andExpect(view().name("deck-add-card-page"));
-
-        then(mockedDeckService).should().getDeckById(testDeckId);
-    }
-
-    @WithMockUser(username = "test@example.com")
-    @Test
-    void getAddCardToDeckPage_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when + then
-        mockMvc.perform(get(String.format("/deck/%d/add", testDeckId)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithAnonymousUser
-    @Test
-    void getAddCardToDeckPage_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when + then
-        mockMvc.perform(get(String.format("/deck/%d/add", testDeckId)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @WithMockUser(username = "test@example.com")
-    @Test
-    void createNewFlashcard_ShouldCreateNewFlashcardAndRedirectToAddCardPage() throws Exception {
-        // given
-        long testDeckId = 94L;
-        FlashcardCreationDTO testCreateCardDto = new FlashcardCreationDTO("front1", "back1");
-
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/add", testDeckId))
-                .with(csrf())
-                .flashAttr("newFlashcard", testCreateCardDto))
-
-                // then
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl(String.format("/deck/%d/add", testDeckId)));
-
-        then(mockedFlashcardService).should().createNewFlashcard(testDeckId, testCreateCardDto);
-    }
-
-    @WithMockUser(username = "test@example.com")
-    @Test
-    void createNewFlashcard_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = -1L;
-        FlashcardCreationDTO testCreateCardDto = new FlashcardCreationDTO("front1", "back1");
-
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/add", testDeckId))
-                        .with(csrf())
-                        .flashAttr("newFlashcard", testCreateCardDto))
-                // then
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithAnonymousUser
-    @Test
-    void createNewFlashcard_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        // given
-        long testDeckId = 94L;
-        FlashcardCreationDTO testCreateCardDto = new FlashcardCreationDTO("front1", "back1");
-
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/add", testDeckId))
-                        .with(csrf())
-                        .flashAttr("newFlashcard", testCreateCardDto))
-                // then
-                .andExpect(status().isUnauthorized());
-    }*/
-
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void deleteDeck_ShouldDeleteDeckAndRedirectToAllDecksPage() throws Exception {
         // given
@@ -229,7 +137,7 @@ class DeckControllerTest {
         then(mockedDeckService).should(times(1)).deleteDeck(testDeckId);
     }
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void deleteDeck_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
         // given
@@ -255,7 +163,7 @@ class DeckControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void showAllDecksFlashcards_ShouldReturnAllDeckCardsPage() throws Exception {
         // given
@@ -286,7 +194,7 @@ class DeckControllerTest {
         then(mockedFlashcardService).should().getAllFlashcardsByDeck(testDeck);
     }
 
-    @WithMockUser(username = "test@example.com")
+    @WithMockUser(username = "username")
     @Test
     void showAllDecksFlashcards_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
         // given

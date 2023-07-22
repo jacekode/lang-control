@@ -1,21 +1,19 @@
 package langcontrol.app.spaced_repetition;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import langcontrol.app.flashcard.Flashcard;
 import langcontrol.app.flashcard.FlashcardService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.bind.support.SessionStatus;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
 
@@ -50,17 +48,6 @@ public class SpacedRepetitionController {
             return "review";
         }
     }
-
-//    @PostMapping(value = "/rating", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-//            produces = MediaType.APPLICATION_JSON_VALUE)
-//    @ResponseBody
-//    public ResponseEntity<Object> handleFlashcardRating(@Valid @ModelAttribute("rating") FlashcardRatingDTO rating,
-//                                                @ModelAttribute("reviewCards") ArrayDeque<Flashcard> readyForReview) {
-//        Flashcard cardAfterRating = spacedRepetitionService.applyRating(rating.getFlashcardId(), rating.getRatingType());
-//        readyForReview.poll();
-//        FlashcardOverviewDTO overviewDto = FlashcardOverviewDTO.fromEntity(cardAfterRating);
-//        return ResponseEntity.ok(overviewDto);
-//    }
 
     @GetMapping("/review/next")
     public String reviewNextCard(@ModelAttribute("reviewCards") Deque<Flashcard> readyForReview,
