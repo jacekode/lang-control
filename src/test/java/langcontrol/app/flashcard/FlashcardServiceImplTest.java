@@ -1,21 +1,28 @@
 package langcontrol.app.flashcard;
 
+import langcontrol.app.account.Account;
+import langcontrol.app.generator.Dictionary;
+import langcontrol.app.security.DefinedRoleValue;
+import langcontrol.app.security.Role;
 import langcontrol.app.user_profile.UserProfile;
 import langcontrol.app.deck.Deck;
 import langcontrol.app.deck.DeckRepository;
 import langcontrol.app.exception.GeneralNotFoundException;
 import langcontrol.app.deck.LanguageCode;
+import langcontrol.app.util.PrincipalRetriever;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,69 +37,120 @@ class FlashcardServiceImplTest {
 
     private FlashcardRepository mockedFlashcardRepository;
     private DeckRepository mockedDeckRepository;
+    private Dictionary mockedDictionary;
     private FlashcardServiceImpl underTest;
 
     @BeforeEach
     void setUp() {
         mockedFlashcardRepository = Mockito.mock(FlashcardRepository.class);
         mockedDeckRepository = Mockito.mock(DeckRepository.class);
-        underTest = new FlashcardServiceImpl(mockedFlashcardRepository, mockedDeckRepository, deckService, dictionary);
+        mockedDictionary = Mockito.mock(Dictionary.class);
+        underTest = new FlashcardServiceImpl(mockedFlashcardRepository, mockedDeckRepository, mockedDictionary);
     }
 
     @ParameterizedTest
     @ValueSource(longs = {1, 2, 3, 0, -1})
     void deleteFlashcard_ShouldDeleteTheFlashcardWithSpecifiedId(long id) {
+        // given
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
+        testAccount.setUserProfile(testUserProfile);
+        Deck testDeck = new Deck(78L, "test deck", testUserProfile,
+                LanguageCode.ENGLISH, LanguageCode.ITALIAN, new ArrayList<>());
+
+        testUserProfile.setDecks(new ArrayList<>());
+        testUserProfile.getDecks().add(testDeck);
+
+        Flashcard testCard = new Flashcard();
+        testCard.setId(id);
+        testCard.setDeck(testDeck);
+        testCard.setFront("front");
+        testCard.setBack("back");
+        testDeck.getFlashcards().add(testCard);
+
+        given(mockedFlashcardRepository.findById(Mockito.anyLong())).willReturn(Optional.of(testCard));
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
+
         // when
-        underTest.deleteFlashcard(id);
+            underTest.deleteFlashcard(id);
+        }
 
         // then
-        ArgumentCaptor<Long> argumentCaptor = ArgumentCaptor.forClass(Long.class);
-        verify(mockedFlashcardRepository).deleteById(argumentCaptor.capture());
-        assertEquals(id, argumentCaptor.getValue());
-    }
+        ArgumentCaptor<Flashcard> argumentCaptor = ArgumentCaptor.forClass(Flashcard.class);
+        verify(mockedFlashcardRepository).delete(argumentCaptor.capture());
+        assertEquals(id, argumentCaptor.getValue().getId());
 
-//    @ParameterizedTest
-//    @ValueSource(longs = {-1, 0})
-//    void deleteFlashcard_ShouldThrowException_WhenIdIsLessThanZero(long id) {
-//        // then
-//        assertThrows(IllegalArgumentException.class,
-//                () -> underTest.deleteFlashcard(id));
-//    }
+    }
 
     @Test
     void createNewFlashcard_ShouldCreateFlashcard_WhenDeckIsFound() {
         // given
         long deckId = 2L;
-        FlashcardCreationDTO creationDTO = new FlashcardCreationDTO("test front", "test back");
+        FlashcardCreationDTO creationDto = new FlashcardCreationDTO();
+        creationDto.setFront("test front");
+        creationDto.setBack("test back");
+        creationDto.setPartOfSpeech(PartOfSpeech.PHRASE);
+        creationDto.setDynamicExamples(true);
         Deck mockedDeck = Mockito.mock(Deck.class);
-        when(mockedDeckRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(mockedDeck));
+
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
+        testAccount.setUserProfile(testUserProfile);
+        Deck testDeck = new Deck(deckId, "test deck", testUserProfile,
+                LanguageCode.ENGLISH, LanguageCode.ITALIAN, new ArrayList<>());
+        testUserProfile.setDecks(new ArrayList<>());
+        testUserProfile.getDecks().add(testDeck);
+
+        when(mockedDeckRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(testDeck));
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
 
         // when
-        underTest.createNewFlashcard(deckId, creationDTO);
+            underTest.createNewFlashcard(deckId, creationDto);
+        }
 
         // then
         ArgumentCaptor<Long> longArgumentCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<Flashcard> flashcardArgumentCaptor = ArgumentCaptor.forClass(Flashcard.class);
 
-        InOrder inOrder = Mockito.inOrder(mockedDeckRepository, mockedDeck);
-        inOrder.verify(mockedDeckRepository).findById(longArgumentCaptor.capture());
-        inOrder.verify(mockedDeck).addFlashcard(flashcardArgumentCaptor.capture());
-
+        verify(mockedDeckRepository).findById(longArgumentCaptor.capture());
         assertEquals(deckId, longArgumentCaptor.getValue());
-        assertEquals("test front", flashcardArgumentCaptor.getValue().getFront());
-        assertEquals("test back", flashcardArgumentCaptor.getValue().getBack());
+        Flashcard addedCard = testDeck.getFlashcards().get(0);
+        assertEquals("test front", addedCard.getFront());
+        assertEquals("test back", addedCard.getBack());
+        assertEquals(PartOfSpeech.PHRASE, addedCard.getPartOfSpeech());
+        assertTrue(addedCard.isDynamicExamples());
     }
 
     @Test
     void createNewFlashcard_ShouldThrowException_WhenDeckIsNotFound() {
         // given
         long deckId = 2L;
-        FlashcardCreationDTO creationDTO = new FlashcardCreationDTO("test front", "test back");
-        when(mockedDeckRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
 
-        // then
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+
+        FlashcardCreationDTO creationDto = new FlashcardCreationDTO();
+        creationDto.setFront("test front");
+        creationDto.setBack("test back");
+        creationDto.setPartOfSpeech(PartOfSpeech.PHRASE);
+        creationDto.setDynamicExamples(false);
+
+        given(mockedDeckRepository.findById(Mockito.anyLong())).willReturn(Optional.empty());
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
+
+        // when, then
         assertThrows(GeneralNotFoundException.class,
-                () -> underTest.createNewFlashcard(deckId, creationDTO));
+                () -> underTest.createNewFlashcard(deckId, creationDto));
+        }
+
     }
 
     @Test
@@ -104,17 +162,24 @@ class FlashcardServiceImplTest {
         LocalDateTime locDateTimeInUtcExpected = LocalDateTime.now(Clock.systemUTC());
         LocalDate locDateExpected = ZonedDateTime.now(ZoneId.of(zoneId)).toLocalDateTime().toLocalDate();
 
-        Deck testDeck = new Deck(deckId,
-                "test deck",
-                new UserProfile(),
-                LanguageCode.SPANISH,
-                LanguageCode.ENGLISH,
-                new ArrayList<>());
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
+        testAccount.setUserProfile(testUserProfile);
+        Deck testDeck = new Deck(deckId, "test deck", testUserProfile,
+                LanguageCode.ENGLISH, LanguageCode.ITALIAN, new ArrayList<>());
+        testUserProfile.setDecks(new ArrayList<>());
+        testUserProfile.getDecks().add(testDeck);
 
         given(mockedDeckRepository.findById(Mockito.anyLong())).willReturn(Optional.of(testDeck));
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
 
         // when
-        Deque<Flashcard> result = underTest.fetchReadyForReviewShuffledWithLimit(deckId, zoneId, limit);
+            Deque<Flashcard> result = underTest.fetchReadyForReviewShuffledWithLimit(deckId, zoneId, limit);
+        }
 
         // then
         InOrder inOrder = Mockito.inOrder(mockedDeckRepository, mockedFlashcardRepository);
@@ -152,11 +217,18 @@ class FlashcardServiceImplTest {
         String zoneId = "America/Los_Angeles";
         long deckId = 2;
         int limit = 15;
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+
         given(mockedDeckRepository.findById(Mockito.anyLong())).willReturn(Optional.empty());
 
-        // then
-        assertThrows(GeneralNotFoundException.class,
-                () -> underTest.fetchReadyForReviewShuffledWithLimit(deckId, zoneId, limit));
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
+
+        // when, then
+            assertThrows(GeneralNotFoundException.class,
+                    () -> underTest.fetchReadyForReviewShuffledWithLimit(deckId, zoneId, limit));
+        }
     }
 
     @Test
@@ -186,15 +258,23 @@ class FlashcardServiceImplTest {
     @Test
     void getAllFlashcardsByDeck_ShouldGetFlashcards() {
         // given
-        Deck testDeck = new Deck(2L,
-                "test deck",
-                new UserProfile(),
-                LanguageCode.SPANISH,
-                LanguageCode.ENGLISH,
-                new ArrayList<>());
+        Account testAccount = new Account(56L, "username", "password",
+                List.of(new Role(1L, DefinedRoleValue.USER)));
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
+        testAccount.setUserProfile(testUserProfile);
+        Deck testDeck = new Deck(2L, "test deck", testUserProfile,
+                LanguageCode.ENGLISH, LanguageCode.ITALIAN, new ArrayList<>());
+        testUserProfile.setDecks(new ArrayList<>());
+        testUserProfile.getDecks().add(testDeck);
+
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
 
         // when
-        underTest.getAllFlashcardsByDeck(testDeck);
+            underTest.getAllFlashcardsByDeck(testDeck);
+        }
 
         // then
         ArgumentCaptor<Deck> deckArgumentCaptor = ArgumentCaptor.forClass(Deck.class);

@@ -202,14 +202,18 @@ class BasicSpacedRepetitionAlgorithmTest {
         // given
         Flashcard testFlashcard = cardInInitialState();
         RatingType ratingPrevious = RatingType.LEARN_PREVIOUS;
-        LocalDateTime learnViewBeforeOp = testFlashcard.getNextLearnViewInUTC();
+        LocalDateTime expectedLearnViewAfterOp = LocalDateTime
+                .of(2017, 5, 27, 11, 46, 23);
+
+        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
+            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(expectedLearnViewAfterOp);
 
         // when
-        underTest.apply(testFlashcard, ratingPrevious);
-        LocalDateTime learnViewAfterOp = testFlashcard.getNextLearnViewInUTC();
+            underTest.apply(testFlashcard, ratingPrevious);
+        }
 
         // then
-        assertEquals(learnViewBeforeOp, learnViewAfterOp);
+        assertEquals(expectedLearnViewAfterOp, testFlashcard.getNextLearnViewInUTC());
     }
 
     @Test
@@ -401,25 +405,6 @@ class BasicSpacedRepetitionAlgorithmTest {
         assertFalse(testFlashcard.isInLearnMode());
         assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
         assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
-    }
-
-    @Test
-    void apply_ShouldSwitchToLearnModeAndNotResetIntervalDays_WhenCardIsInReviewModeAndRatingIsReviewToLearnMode() {
-        // given
-        Flashcard testFlashcard = cardInReviewModeWithData();
-        double intervalDaysExpected = testFlashcard.getCurrentIntervalDays();
-        RatingType ratingToLearnMode = RatingType.REVIEW_TO_LEARN_MODE;
-
-        // when
-        underTest.apply(testFlashcard, ratingToLearnMode);
-
-        // then
-        assertTrue(testFlashcard.isInLearnMode());
-        assertEquals(LearnModeStep.ONE, testFlashcard.getLearnModeStep());
-        assertEquals(intervalDaysExpected, testFlashcard.getCurrentIntervalDays());
-        assertNotNull(testFlashcard.getCurrentIntervalDays());
-        assertNotNull(testFlashcard.getNextReviewInUTC());
-        assertNotNull(testFlashcard.getNextReviewWithoutTimeInUTC());
     }
 
     @Test

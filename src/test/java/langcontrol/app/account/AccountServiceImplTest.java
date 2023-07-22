@@ -1,10 +1,14 @@
-package langcontrol.app.security;
+package langcontrol.app.account;
 
 import langcontrol.app.account.Account;
 import langcontrol.app.account.AccountRegistrationDTO;
 import langcontrol.app.account.AccountRepository;
 import langcontrol.app.account.AccountServiceImpl;
 import langcontrol.app.exception.UsernameAlreadyExistsException;
+import langcontrol.app.security.DefinedRoleValue;
+import langcontrol.app.security.Role;
+import langcontrol.app.security.RoleRepository;
+import langcontrol.app.user_settings.UserSettingsRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,13 +44,17 @@ class AccountServiceImplTest {
     @Mock
     private PasswordEncoder mockedPasswordEncoder;
 
+    @Mock
+    private UserSettingsRepository mockedUserSettingsRepository;
+
     @Captor
     private ArgumentCaptor<Account> accountCaptor;
 
 
     @BeforeEach
     void setUp() {
-        this.underTest = new AccountServiceImpl(mockedAccountRepository, mockedRoleRepository, mockedPasswordEncoder);
+        this.underTest = new AccountServiceImpl(mockedAccountRepository, mockedRoleRepository,
+                mockedPasswordEncoder, mockedUserSettingsRepository);
     }
 
     @Test

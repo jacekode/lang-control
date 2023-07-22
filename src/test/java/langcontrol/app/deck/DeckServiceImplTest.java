@@ -1,13 +1,14 @@
 package langcontrol.app.deck;
 
-import langcontrol.app.exception.AccessNotAllowedException;
-import langcontrol.app.exception.GeneralNotFoundException;
-import langcontrol.app.exception.DeckCreationException;
 import langcontrol.app.account.Account;
+import langcontrol.app.exception.AccessNotAllowedException;
+import langcontrol.app.exception.DeckCreationException;
+import langcontrol.app.exception.GeneralNotFoundException;
+import langcontrol.app.flashcard.FlashcardService;
 import langcontrol.app.security.DefinedRoleValue;
 import langcontrol.app.security.Role;
 import langcontrol.app.user_profile.UserProfile;
-import langcontrol.app.user_profile.UserProfileRepository;
+import langcontrol.app.user_profile.UserProfileService;
 import langcontrol.app.util.PrincipalRetriever;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class DeckServiceImplTest {
@@ -33,15 +33,14 @@ class DeckServiceImplTest {
     private DeckRepository mockedDeckRepository;
 
     @Mock
-    private UserProfileRepository mockedUserProfileRepository;
+    private UserProfileService mockedUserProfileService;
 
-    @Captor
-    private ArgumentCaptor<Deck> deckCaptor;
-
+    @Mock
+    private FlashcardService mockedFlashcardService;
 
     @BeforeEach
     void setUp() {
-        this.underTest = new DeckServiceImpl(mockedDeckRepository, mockedUserProfileRepository, userProfileService, flashcardService);
+        this.underTest = new DeckServiceImpl(mockedDeckRepository, mockedUserProfileService, mockedFlashcardService);
     }
 
     @Test
@@ -74,15 +73,15 @@ class DeckServiceImplTest {
                 List.of(new Role(1L, DefinedRoleValue.USER)),
                 true, true,
                 true, true);
-        UserProfile testUserProfile = new UserProfile(7L, "John Doe", testAccount, new ArrayList<>());
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
         testAccount.setUserProfile(testUserProfile);
-        given(mockedUserProfileRepository.findByAccount(testAccount)).willReturn(Optional.of(testUserProfile));
-        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
-            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
+
+        given(mockedUserProfileService.retrieveCurrentUserProfile()).willReturn(testUserProfile);
 
         // when
-            underTest.createNewDeck(testDeck);
-        }
+        underTest.createNewDeck(testDeck);
 
         // then
         assertTrue(testUserProfile.getDecks().contains(testDeck));
@@ -108,20 +107,22 @@ class DeckServiceImplTest {
                 List.of(new Role(1L, DefinedRoleValue.USER)),
                 true, true,
                 true, true);
-        UserProfile testUserProfile = new UserProfile(7L, "John Doe", testAccount, deckList);
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(deckList);
         testAccount.setUserProfile(testUserProfile);
         deck1.setUserProfile(testUserProfile);
         deck2.setUserProfile(testUserProfile);
+
+        given(mockedUserProfileService.retrieveCurrentUserProfile()).willReturn(testUserProfile);
         given(mockedDeckRepository.findByUserProfile(testUserProfile)).willReturn(deckViewList);
-        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
-            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
 
         // when
             List<DeckView> result = underTest.getAllDecks();
 
         // then
             assertEquals(deckViewList, result);
-        }
+//        }
     }
 
     @Test
@@ -145,9 +146,12 @@ class DeckServiceImplTest {
                 List.of(new Role(1L, DefinedRoleValue.USER)),
                 true, true,
                 true, true);
-        UserProfile testUserProfile = new UserProfile(7L, "John Doe", testAccount, new ArrayList<>());
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
         testAccount.setUserProfile(testUserProfile);
-        UserProfile testUserProfile2 = new UserProfile(14L, "Jane Smith", null, new ArrayList<>());
+        UserProfile testUserProfile2 = new UserProfile(14L, "Jane Smith");
+        testUserProfile2.setDecks(new ArrayList<>());
         Deck testDeck = new Deck(testDeckId, "Deck One", testUserProfile2,
                 LanguageCode.SPANISH, LanguageCode.ENGLISH, new ArrayList<>());
 
@@ -170,7 +174,9 @@ class DeckServiceImplTest {
                 List.of(new Role(1L, DefinedRoleValue.USER)),
                 true, true,
                 true, true);
-        UserProfile testUserProfile = new UserProfile(7L, "John Doe", testAccount, new ArrayList<>());
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
         testAccount.setUserProfile(testUserProfile);
         Deck testDeck = new Deck(testDeckId, "Deck One", testUserProfile,
                 LanguageCode.SPANISH, LanguageCode.ENGLISH, new ArrayList<>());
@@ -193,13 +199,29 @@ class DeckServiceImplTest {
     @Test
     void deleteDeck_ShouldDeleteDeckWithGivenId() {
         // given
-        Mockito.doNothing().when(mockedDeckRepository).deleteById(Mockito.anyLong());
         long testDeckId = 34L;
+        Account testAccount = new Account(
+                7L, "test@example.com",
+                "aBt3%4gh45srSuiAe5h%EA5h",
+                List.of(new Role(1L, DefinedRoleValue.USER)),
+                true, true,
+                true, true);
+        UserProfile testUserProfile = new UserProfile(7L, "John Doe");
+        testUserProfile.setAccount(testAccount);
+        testUserProfile.setDecks(new ArrayList<>());
+        testAccount.setUserProfile(testUserProfile);
+        Deck testDeck = new Deck(testDeckId, "Deck One", testUserProfile,
+                LanguageCode.SPANISH, LanguageCode.ENGLISH, new ArrayList<>());
 
-        // when
-        underTest.deleteDeck(testDeckId);
-        
-        // then
-        then(mockedDeckRepository).should().deleteById(testDeckId);
+        given(mockedDeckRepository.findById(testDeckId)).willReturn(Optional.of(testDeck));
+        try (MockedStatic<PrincipalRetriever> mockedStaticPR = Mockito.mockStatic(PrincipalRetriever.class)) {
+            mockedStaticPR.when(PrincipalRetriever::retrieveAccount).thenReturn(testAccount);
+
+            // when
+            underTest.deleteDeck(testDeckId);
+
+            // then
+            then(mockedDeckRepository).should().delete(testDeck);
+        }
     }
 }

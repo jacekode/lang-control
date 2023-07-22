@@ -19,12 +19,12 @@ import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
@@ -43,14 +43,14 @@ class AuthControllerTest {
     @Test
     void getSignInPage_ShouldReturnLoginPage() throws Exception {
         mockMvc.perform(get("/signin"))
-                .andExpect(view().name("signin-page"));
+                .andExpect(view().name("signin"));
     }
 
     @WithAnonymousUser
     @Test
     void getSignUpPage_ShouldReturnRegisterPage() throws Exception {
         mockMvc.perform(get("/signup"))
-                .andExpect(view().name("signup-page"))
+                .andExpect(view().name("signup"))
                 .andExpect(model().attribute("registrationData",
                         instanceOf(AccountRegistrationDTO.class)));
     }
@@ -60,21 +60,16 @@ class AuthControllerTest {
     void registerAccount_ShouldRegisterANewAccount_WhenDataIsValid() throws Exception {
         // given
         AccountRegistrationDTO validRegistrationDto = new AccountRegistrationDTO(
-                "test.mail1@example.com", "aBcd12#4", "John Doe");
+                "testusername", "abcdeF2#", "John");
 
         // when
         mockMvc.perform(post("/signup")
                         .with(csrf())
                         .flashAttr("registrationData", validRegistrationDto))
-                .andExpect(view().name("redirect:/"));
+                .andExpect(redirectedUrl("?accountCreated"));
 
         // then
         then(mockedAccountService).should(times(1))
                 .registerNewUserAccount(validRegistrationDto);
-    }
-
-    @Disabled
-    @Test
-    void registerAccount_ShouldReturnBadRequestStatus_WhenDataIsInvalid() {
     }
 }
