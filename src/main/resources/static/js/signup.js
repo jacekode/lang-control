@@ -4,17 +4,14 @@ Array.from(document.querySelectorAll('#signup-password-input, #repeat-signup-pas
         checkSignupValidity()
     })
 })
-
 function checkSignupValidity() {
     let signUpPasswordInput = document.getElementById('signup-password-input')
     let signUpRepeatPasswordInput = document.getElementById('repeat-signup-password-input')
     if (signUpPasswordInput.value !== signUpRepeatPasswordInput.value) {
         signUpPasswordInput.setCustomValidity('Passwords do not match.')
         signUpRepeatPasswordInput.setCustomValidity('Passwords do not match.')
-        console.log("DONT MATCH")
     } else {
-            signUpPasswordInput.setCustomValidity('')
-            signUpRepeatPasswordInput.setCustomValidity('')
-            console.log("DO MATCH")
+        signUpPasswordInput.setCustomValidity('')
+        signUpRepeatPasswordInput.setCustomValidity('')
     }
 }
