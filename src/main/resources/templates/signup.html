@@ -39,7 +39,7 @@
               <div class="form-floating mb-4">
                 <input id="repeat-signup-password-input" type="password" class="form-control" name="repeat-password" placeholder="Repeat Password" aria-describedby="password-info" minlength="8" maxlength="50" required 
                 pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$">
-                <label for="repeat-pwd" class="form-label">Repeat password</label>
+                <label for="repeat-signup-password-input" class="form-label">Repeat password</label>
               </div>
               <div class="form-floating mb-4">
                 <div id="password-info" class="form-text">
@@ -54,7 +54,7 @@
                 </div>
               </div>
               <div class="text-center">
-                <button type="submit" class="btn btn-primary">Sign up</button>
+                <button id="form-submit" type="submit" class="btn btn-primary">Sign up</button>
               </div>
             </form>
           </div>
@@ -65,6 +65,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-      <script defer src="../static/js/signup-account.js"></script>
+      <script th:src="@{/js/signup.js}" src="/static/js/signup.js"></script>
   </body>
 </html>
