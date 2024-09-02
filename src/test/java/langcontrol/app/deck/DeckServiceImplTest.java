@@ -4,11 +4,11 @@ import langcontrol.app.account.Account;
 import langcontrol.app.exception.AccessNotAllowedException;
 import langcontrol.app.exception.DeckCreationException;
 import langcontrol.app.exception.GeneralNotFoundException;
-import langcontrol.app.flashcard.FlashcardService;
+import langcontrol.app.flashcard.WordFlashcardService;
 import langcontrol.app.security.DefinedRoleValue;
 import langcontrol.app.security.Role;
-import langcontrol.app.user_profile.UserProfile;
-import langcontrol.app.user_profile.UserProfileService;
+import langcontrol.app.userprofile.UserProfile;
+import langcontrol.app.userprofile.UserProfileService;
 import langcontrol.app.util.PrincipalRetriever;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,11 +36,11 @@ class DeckServiceImplTest {
     private UserProfileService mockedUserProfileService;
 
     @Mock
-    private FlashcardService mockedFlashcardService;
+    private WordFlashcardService mockedWordFlashcardService;
 
     @BeforeEach
     void setUp() {
-        this.underTest = new DeckServiceImpl(mockedDeckRepository, mockedUserProfileService, mockedFlashcardService);
+        this.underTest = new DeckServiceImpl(mockedDeckRepository, mockedUserProfileService, mockedWordFlashcardService);
     }
 
     @Test
@@ -98,7 +98,7 @@ class DeckServiceImplTest {
         List<DeckView> deckViewList = deckList
                 .stream()
                 .map(d -> new DeckView(d.getId(), d.getName(),
-                        d.getTargetLanguage(), d.getSourceLanguage()))
+                        d.getTargetLang(), d.getSourceLang()))
                 .toList();
 
         Account testAccount = new Account(
@@ -191,8 +191,8 @@ class DeckServiceImplTest {
         // then
             assertEquals(testDeck.getId(), result.getId());
             assertEquals(testDeck.getName(), result.getName());
-            assertEquals(testDeck.getSourceLanguage(), result.getSourceLanguage());
-            assertEquals(testDeck.getTargetLanguage(), result.getTargetLanguage());
+            assertEquals(testDeck.getSourceLang(), result.getSourceLang());
+            assertEquals(testDeck.getTargetLang(), result.getTargetLang());
         }
     }
 

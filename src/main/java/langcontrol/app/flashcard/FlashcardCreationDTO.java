@@ -2,7 +2,7 @@ package langcontrol.app.flashcard;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import langcontrol.app.user_settings.UserSettings;
+import langcontrol.app.usersettings.UserSettings;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +18,7 @@ public class FlashcardCreationDTO {
     private String back;
     private PartOfSpeech partOfSpeech;
     private boolean dynamicExamples;
-    private String example;
+    private String targetExample;
     private String translatedExample;
 
     public static FlashcardCreationDTO withUserSettings(UserSettings userSettings) {

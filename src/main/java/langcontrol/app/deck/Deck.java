@@ -2,7 +2,7 @@ package langcontrol.app.deck;
 
 import jakarta.persistence.*;
 import langcontrol.app.flashcard.Flashcard;
-import langcontrol.app.user_profile.UserProfile;
+import langcontrol.app.userprofile.UserProfile;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +11,8 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -22,18 +23,24 @@ public class Deck {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String name;
 
     @ManyToOne
     @JoinColumn(name = "user_profile_id", foreignKey = @ForeignKey(name = "fk_deck_user_profile"))
     private UserProfile userProfile;
 
-    @Column
-    private LanguageCode targetLanguage;
+    /**
+     * The language that the user is learning.
+     */
+    @Column(name = "target_lang_code", columnDefinition = "VARCHAR(2)", nullable = false)
+    private LanguageCode targetLang;
 
-    @Column
-    private LanguageCode sourceLanguage;
+    /**
+     * The language that the user knows.
+     */
+    @Column(name = "source_lang_code", columnDefinition = "VARCHAR(2)", nullable = false)
+    private LanguageCode sourceLang;
 
     @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL,
             orphanRemoval = true, fetch = FetchType.LAZY)
@@ -42,8 +49,8 @@ public class Deck {
     public Deck(CreateDeckDTO createDeckDTO) {
         this.id = null;
         this.name = createDeckDTO.getName();
-        this.targetLanguage = createDeckDTO.getTargetLanguage();
-        this.sourceLanguage = createDeckDTO.getSourceLanguage();
+        this.targetLang = createDeckDTO.getTargetLanguage();
+        this.sourceLang = createDeckDTO.getSourceLanguage();
         this.flashcards = new ArrayList<>();
         this.userProfile = null;
     }

@@ -64,6 +64,13 @@ public class GeneralExceptionHandlingControllerAdvice {
         return e.getMessage();
     }
 
+    @ExceptionHandler(InvalidDatabaseValueException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public String handleInvalidDatabaseValueException(InvalidDatabaseValueException e) {
+        return e.getMessage();
+    }
+
     @ExceptionHandler(UsernameAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     @ResponseBody
@@ -72,5 +79,4 @@ public class GeneralExceptionHandlingControllerAdvice {
         var body = new ErrorResponseBody(HttpStatus.CONFLICT, req.getRequestURI(), ex);
         return body;
     }
-
 }

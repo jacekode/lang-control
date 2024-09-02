@@ -2,178 +2,104 @@ package langcontrol.app.flashcard;
 
 import jakarta.persistence.*;
 import langcontrol.app.deck.Deck;
-import langcontrol.app.spaced_repetition.SpacedRepetitionItem;
 import langcontrol.app.deck.LanguageCode;
+import langcontrol.app.spacedrepetition.LearnModeStep;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.util.Objects;
+import java.time.*;
 
 @Getter @Setter
 @Entity
 @Table(name = "flashcard")
-public class Flashcard extends SpacedRepetitionItem {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype")
+public class Flashcard {
+
+    @Transient
+    protected static final float INITIAL_INCREASE_FACTOR = 1.3F;
+
+    @Transient
+    protected static final float INITIAL_REDUCE_FACTOR = 0.5F;
+
+    @Transient
+    public static final long INITIAL_REVIEW_INTERVAL = Duration.ofHours(24).toMinutes();
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
+
+    @Column(name = "in_learn_mode", nullable = false)
+    protected boolean inLearnMode;
+
+    @Column(name = "learn_mode_step")
+    protected LearnModeStep learnModeStep;
+
+    /**
+     * Card's next view datetime in UTC set by the spaced repetition algorithm.
+     */
+    @Column(name = "next_view_utc", columnDefinition = "DATETIME")
+    protected LocalDateTime nextView;
+
+    /**
+     * Currently applied interval in minutes.
+     */
+    @Column(name = "current_interval")
+    protected Long currentInterval;
+
+    @Column(name = "increase_factor", nullable = false)
+    protected Float iFactor;
+
+    @Column(name = "reduce_factor", nullable = false)
+    protected Float rFactor;
+
+    @Column(name = "created_at", columnDefinition = "DATETIME", nullable = false)
+    protected LocalDateTime createdAt;
+
+    /**
+     * The language that the user knows.
+     */
+    @Column(name = "source_lang_code", columnDefinition = "VARCHAR(2)", nullable = false)
+    protected LanguageCode sourceLang;
+
+    /**
+     * The language that the user is learning.
+     */
+    @Column(name = "target_lang_code", columnDefinition = "VARCHAR(2)", nullable = false)
+    protected LanguageCode targetLang;
 
     @ManyToOne
     @JoinColumn(name = "deck_id", nullable = false, foreignKey = @ForeignKey(name = "fk_flashcard_deck"))
-    private Deck deck;
+    protected Deck deck;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "source_language", nullable = false)
-    private LanguageCode sourceLanguage;
+    protected Flashcard() { }
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "target_language", nullable = false)
-    private LanguageCode targetLanguage;
+    protected Flashcard(Deck deck, LanguageCode sourceLang, LanguageCode targetLang, boolean initialReviewMode) {
+        if (initialReviewMode) {
+            this.inLearnMode = false;
+            this.learnModeStep = null;
+            this.currentInterval = INITIAL_REVIEW_INTERVAL;
+        } else {
+            this.inLearnMode = true;
+            this.learnModeStep = LearnModeStep.TWO;
+            this.currentInterval = Duration
+                    .of(learnModeStep.getAmountToAdd(), learnModeStep.getTemporalUnit())
+                    .toMinutes();
+        }
+        this.nextView = LocalDateTime.now(Clock.systemUTC()).plusMinutes(currentInterval);
 
-    @Column(nullable = false)
-    private String front;
-
-    @Column(nullable = false)
-    private String back;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "part_of_speech")
-    private PartOfSpeech partOfSpeech;
-
-    @Column(name = "dynamic_examples")
-    private boolean dynamicExamples;
-
-    @Column
-    private String example;
-
-    @Column(name = "translated_example")
-    private String translatedExample;
-
-
-    @Column(name = "creation_date_time_in_utc", nullable = false)
-    private LocalDateTime creationDateTimeInUTC;
-
-
-    public Flashcard() {
-        super(false);
-    }
-
-    private Flashcard(Deck deck, LanguageCode sourceLanguage, LanguageCode targetLanguage,
-                      String front, String back, PartOfSpeech partOfSpeech, boolean dynamicExamples,
-                      String example, String translatedExample, boolean initialReviewMode) {
-        super(initialReviewMode);
         this.id = null;
+        this.iFactor = INITIAL_INCREASE_FACTOR;
+        this.rFactor = INITIAL_REDUCE_FACTOR;
+        this.createdAt = LocalDateTime.now(Clock.systemUTC());
         this.deck = deck;
-        this.sourceLanguage = sourceLanguage;
-        this.targetLanguage = targetLanguage;
-        this.front = front;
-        this.back = back;
-        this.partOfSpeech = partOfSpeech;
-        this.dynamicExamples = dynamicExamples;
-        this.example = example;
-        this.translatedExample = translatedExample;
-        this.creationDateTimeInUTC = LocalDateTime.now(Clock.systemUTC());
+        this.sourceLang = sourceLang;
+        this.targetLang = targetLang;
     }
 
-    public static Flashcard.Builder inInitialLearnModeState() {
-        return new Builder(false);
-    }
-
-    public static Flashcard.Builder inInitialReviewModeState() {
-        return new Builder(true);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Flashcard flashcard = (Flashcard) o;
-        return Objects.equals(id, flashcard.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-
-    public static class Builder {
-
-        private final boolean initialReviewMode;
-        private Deck deck;
-        private LanguageCode sourceLanguage;
-        private LanguageCode targetLanguage;
-        private String front;
-        private String back;
-        private PartOfSpeech partOfSpeech;
-        private boolean dynamicExamples;
-        private String example;
-        private String translatedExample;
-
-        public Builder(boolean initialReviewMode) {
-            this.initialReviewMode = initialReviewMode;
-            this.deck = null;
-            this.sourceLanguage = null;
-            this.targetLanguage = null;
-            this.front = "";
-            this.back = "";
-            this.partOfSpeech = null;
-            this.dynamicExamples = false;
-            this.example = "";
-            this.translatedExample = "";
-        }
-
-        public Builder deck(Deck deck) {
-            this.deck = deck;
-            return this;
-        }
-
-        public Builder sourceLanguage(LanguageCode sourceLanguage) {
-            this.sourceLanguage = sourceLanguage;
-            return this;
-        }
-
-        public Builder targetLanguage(LanguageCode targetLanguage) {
-            this.targetLanguage = targetLanguage;
-            return this;
-        }
-
-        public Builder front(String front) {
-            this.front = front;
-            return this;
-        }
-
-        public Builder back(String back) {
-            this.back = back;
-            return this;
-        }
-
-        public Builder partOfSpeech(PartOfSpeech partOfSpeech) {
-            this.partOfSpeech = partOfSpeech;
-            return this;
-        }
-
-        public Builder dynamicExamples(boolean dynamicExamples) {
-            this.dynamicExamples = dynamicExamples;
-            return this;
-        }
-
-        public Builder example(String example) {
-            this.example = example;
-            return this;
-        }
-
-        public Builder translatedExample(String translatedExample) {
-            this.translatedExample = translatedExample;
-            return this;
-        }
-
-        public Flashcard build() {
-                return new Flashcard(deck, sourceLanguage, targetLanguage,
-                        front, back, partOfSpeech, dynamicExamples, example,
-                        translatedExample, initialReviewMode);
-        }
+    public void updateNextView(long newInterval) {
+        this.setCurrentInterval(newInterval);
+        this.setNextView(LocalDateTime.now(Clock.systemUTC()).plusMinutes(this.getCurrentInterval()));
     }
 }

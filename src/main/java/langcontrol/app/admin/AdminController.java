@@ -1,15 +1,18 @@
 package langcontrol.app.admin;
 
+import jakarta.validation.Valid;
 import langcontrol.app.account.Account;
 import langcontrol.app.account.AccountRepository;
 import langcontrol.app.exception.GeneralNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RequestMapping("/admintools")
 @Controller
 public class AdminController {
@@ -42,7 +45,7 @@ public class AdminController {
 
     @PostMapping("/users/{id}/edit")
     public String handleEditUserRequest(@PathVariable("id") long accountId,
-                                            @ModelAttribute("userToEdit") EditUserDTO editUserDTO) {
+                                        @Valid @ModelAttribute("userToEdit") EditUserDTO editUserDTO) {
         adminService.editUser(accountId, editUserDTO);
         return "redirect:/admintools/users";
     }

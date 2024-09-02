@@ -6,7 +6,7 @@ public interface AdminService {
 
     List<UserOverviewDTO> getAllUsers();
 
-    void editUser(long accountId, EditUserDTO editUserDTO);
+    void editUser(long accountId, EditUserDTO dto);
 
     void deleteUser(long accountId);
 }

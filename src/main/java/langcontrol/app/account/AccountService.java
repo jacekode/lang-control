@@ -16,5 +16,4 @@ public interface AccountService {
     void deleteAccount(DeleteAccountDTO deleteAccountDTO);
 
     Account retrieveCurrentAccount();
-
 }

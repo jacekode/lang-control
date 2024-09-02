@@ -1,7 +1,7 @@
 package langcontrol.app.deck;
 
-import langcontrol.app.flashcard.Flashcard;
-import langcontrol.app.flashcard.FlashcardService;
+import langcontrol.app.flashcard.WordFlashcard;
+import langcontrol.app.flashcard.WordFlashcardService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -35,7 +35,7 @@ class DeckControllerTest {
     private DeckService mockedDeckService;
 
     @MockBean
-    private FlashcardService mockedFlashcardService;
+    private WordFlashcardService mockedWordFlashcardService;
 
     @Captor
     private ArgumentCaptor<Deck> deckArgCaptor;
@@ -77,8 +77,8 @@ class DeckControllerTest {
         then(mockedDeckService).should(times(1)).createNewDeck(deckArgCaptor.capture());
         Deck argument = deckArgCaptor.getValue();
         assertEquals(deckDto.getName(), argument.getName());
-        assertEquals(deckDto.getSourceLanguage(), argument.getSourceLanguage());
-        assertEquals(deckDto.getTargetLanguage(), argument.getTargetLanguage());
+        assertEquals(deckDto.getSourceLanguage(), argument.getSourceLang());
+        assertEquals(deckDto.getTargetLanguage(), argument.getTargetLang());
     }
 
     @WithAnonymousUser
@@ -168,21 +168,21 @@ class DeckControllerTest {
     void showAllDecksFlashcards_ShouldReturnAllDeckCardsPage() throws Exception {
         // given
         long testDeckId = 287L;
-        Flashcard card1 = Flashcard.inInitialReviewModeState()
-                .front("front1").back("back1")
-                .targetLanguage(LanguageCode.GERMAN)
-                .sourceLanguage(LanguageCode.ENGLISH)
+        WordFlashcard card1 = WordFlashcard.inInitialReviewMode()
+                .withFront("front1").withBack("back1")
+                .withTargetLang(LanguageCode.GERMAN)
+                .withSourceLang(LanguageCode.ENGLISH)
                 .build();
-        Flashcard card2 = Flashcard.inInitialReviewModeState()
-                .front("front2").back("back2")
-                .targetLanguage(LanguageCode.GERMAN)
-                .sourceLanguage(LanguageCode.SPANISH)
+        WordFlashcard card2 = WordFlashcard.inInitialReviewMode()
+                .withFront("front2").withBack("back2")
+                .withTargetLang(LanguageCode.GERMAN)
+                .withSourceLang(LanguageCode.SPANISH)
                 .build();
-        List<Flashcard> testCardList = List.of(card1, card2);
+        List<WordFlashcard> testCardList = List.of(card1, card2);
         Deck testDeck = new Deck(testDeckId, "Test Deck", null,
                 LanguageCode.GERMAN, LanguageCode.ENGLISH, testCardList);
         given(mockedDeckService.getDeckById(testDeckId)).willReturn(testDeck);
-        given(mockedFlashcardService.getAllFlashcardsByDeck(testDeck)).willReturn(testCardList);
+        given(mockedWordFlashcardService.getAllFlashcardsByDeck(testDeck)).willReturn(testCardList);
 
         // when
         mockMvc.perform(get(String.format("/deck/%s/cards", testDeckId)))
@@ -191,7 +191,7 @@ class DeckControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("deck", testDeck))
                 .andExpect(model().attribute("deckFlashcards", testCardList));
-        then(mockedFlashcardService).should().getAllFlashcardsByDeck(testDeck);
+        then(mockedWordFlashcardService).should().getAllFlashcardsByDeck(testDeck);
     }
 
     @WithMockUser(username = "username")

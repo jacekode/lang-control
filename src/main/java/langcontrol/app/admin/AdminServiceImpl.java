@@ -4,7 +4,7 @@ import langcontrol.app.account.Account;
 import langcontrol.app.account.AccountRepository;
 import langcontrol.app.exception.GeneralNotFoundException;
 import langcontrol.app.security.DefinedRoleValue;
-import langcontrol.app.user_profile.UserProfile;
+import langcontrol.app.userprofile.UserProfile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +22,7 @@ public class AdminServiceImpl implements AdminService {
         this.accountRepository = accountRepository;
     }
 
+    // todo: remove the stream filtering and add findByRole method to AccountRepository
     @Transactional
     @Override
     public List<UserOverviewDTO> getAllUsers() {
@@ -40,22 +41,21 @@ public class AdminServiceImpl implements AdminService {
 
     @Transactional
     @Override
-    public void editUser(long accountId, EditUserDTO editUserDTO) {
+    public void editUser(long accountId, EditUserDTO dto) {
         Account accountToEdit = accountRepository.findById(accountId)
                 .orElseThrow(GeneralNotFoundException::new);
         UserProfile profileToEdit = accountToEdit.getUserProfile();
-
-        accountToEdit.setUsername(editUserDTO.getUsername());
-        accountToEdit.setEnabled(editUserDTO.isEnabled());
-        profileToEdit.setName(editUserDTO.getName());
+        accountToEdit.setUsername(dto.getUsername());
+        accountToEdit.setEnabled(dto.isEnabled());
+        profileToEdit.setName(dto.getName());
     }
 
     @Transactional
     @Override
     public void deleteUser(long accountId) {
-        Account accountToDelete = accountRepository.findById(accountId).orElseThrow(() -> new GeneralNotFoundException(
-                "Account with id=" + accountId + "couldn't be found."));
-
+        Account accountToDelete = accountRepository.findById(accountId)
+                .orElseThrow(() -> new GeneralNotFoundException(
+                        "Account with id=" + accountId + "couldn't be found."));
         accountRepository.delete(accountToDelete);
     }
 }

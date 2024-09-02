@@ -15,5 +15,4 @@ public interface DeckService {
     void deleteDeck(long deckId);
 
     DeckDetailsDTO extractDeckDetails(long deckId, String zoneId);
-
 }

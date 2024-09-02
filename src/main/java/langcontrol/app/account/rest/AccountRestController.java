@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import langcontrol.app.account.AccountService;
 import langcontrol.app.exception.ErrorResponseBody;
 import langcontrol.app.exception.UsernamesTheSameException;
-import langcontrol.app.exception.WrongPasswordException;
+import langcontrol.app.exception.PasswordMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,15 +47,13 @@ public class AccountRestController {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorResponseBody handleUsernamesTheSameException(UsernamesTheSameException e, HttpServletRequest req) {
-        ErrorResponseBody body = new ErrorResponseBody(HttpStatus.BAD_REQUEST, req.getRequestURI(), e);
-        return body;
+        return new ErrorResponseBody(HttpStatus.BAD_REQUEST, req.getRequestURI(), e);
     }
 
-    @ExceptionHandler(WrongPasswordException.class)
+    @ExceptionHandler(PasswordMismatchException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ResponseBody
-    public ErrorResponseBody handleWrongPasswordException(WrongPasswordException e, HttpServletRequest req) {
-        ErrorResponseBody body = new ErrorResponseBody(HttpStatus.FORBIDDEN, req.getRequestURI(), e);
-        return body;
+    public ErrorResponseBody handleWrongPasswordException(PasswordMismatchException e, HttpServletRequest req) {
+        return new ErrorResponseBody(HttpStatus.FORBIDDEN, req.getRequestURI(), e);
     }
 }

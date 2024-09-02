@@ -2,7 +2,7 @@ package langcontrol.app.account;
 
 import jakarta.persistence.*;
 import langcontrol.app.security.Role;
-import langcontrol.app.user_profile.UserProfile;
+import langcontrol.app.userprofile.UserProfile;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,7 +28,7 @@ public class Account implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.DETACH}, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "account_role",
             joinColumns = @JoinColumn(name = "account_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"),
@@ -36,22 +36,21 @@ public class Account implements UserDetails {
             inverseForeignKey = @ForeignKey(name = "fk_role_account"))
     private List<Role> roles;
 
-    @Column(name = "account_non_expired")
+    @Column(name = "account_non_expired", nullable = false)
     private boolean accountNonExpired;
 
-    @Column(name = "account_non_locked")
+    @Column(name = "account_non_locked", nullable = false)
     private boolean accountNonLocked;
 
-    @Column(name = "credentials_non_expired")
+    @Column(name = "credentials_non_expired", nullable = false)
     private boolean credentialsNonExpired;
 
-    @Column
+    @Column(nullable = false)
     private boolean enabled;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_profile_id", foreignKey = @ForeignKey(name = "fk_account_user_profile"))
     private UserProfile userProfile;
-
 
     public Account(Long id, String username, String password, List<Role> roles, boolean accountNonExpired,
                    boolean accountNonLocked, boolean credentialsNonExpired, boolean enabled) {
@@ -78,6 +77,6 @@ public class Account implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.getRoles();
+        return this.roles;
     }
 }

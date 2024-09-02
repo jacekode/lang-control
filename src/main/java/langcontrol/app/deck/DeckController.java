@@ -1,8 +1,9 @@
 package langcontrol.app.deck;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import langcontrol.app.flashcard.Flashcard;
-import langcontrol.app.flashcard.FlashcardService;
+import langcontrol.app.flashcard.WordFlashcard;
+import langcontrol.app.flashcard.WordFlashcardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,12 +17,12 @@ import java.util.List;
 public class DeckController {
 
     private final DeckService deckService;
-    private final FlashcardService flashcardService;
+    private final WordFlashcardService wordFlashcardService;
 
     @Autowired
-    public DeckController(DeckService deckService, FlashcardService flashcardService) {
+    public DeckController(DeckService deckService, WordFlashcardService wordFlashcardService) {
         this.deckService = deckService;
-        this.flashcardService = flashcardService;
+        this.wordFlashcardService = wordFlashcardService;
     }
 
     @GetMapping("/add-deck")
@@ -32,7 +33,7 @@ public class DeckController {
     }
 
     @PostMapping("/add-deck")
-    public String createDeck(@ModelAttribute("deckToCreate") CreateDeckDTO createDeckDto) {
+    public String createDeck(@Valid @ModelAttribute("deckToCreate") CreateDeckDTO createDeckDto) {
         Deck deckToCreate = new Deck(createDeckDto);
         deckService.createNewDeck(deckToCreate);
         return "redirect:/add-deck";
@@ -41,7 +42,6 @@ public class DeckController {
     @GetMapping("/decks")
     public String getAllDecksPage(Model model) {
         List<DeckView> allDecks = deckService.getAllDecks();
-
         model.addAttribute("decks", allDecks);
         return "all-decks";
     }
@@ -55,7 +55,7 @@ public class DeckController {
     @GetMapping("/deck/{id}/cards")
     public String showAllDecksFlashcards(@Min(1) @PathVariable("id") long deckId, Model model) {
         Deck foundDeck = deckService.getDeckById(deckId);
-        List<Flashcard> deckFlashcards = flashcardService.getAllFlashcardsByDeck(foundDeck);
+        List<WordFlashcard> deckFlashcards = wordFlashcardService.getAllFlashcardsByDeck(foundDeck);
         model.addAttribute("deck", foundDeck);
         model.addAttribute("deckFlashcards", deckFlashcards);
         return "all-deck-cards";

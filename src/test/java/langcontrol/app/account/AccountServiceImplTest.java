@@ -1,14 +1,10 @@
 package langcontrol.app.account;
 
-import langcontrol.app.account.Account;
-import langcontrol.app.account.AccountRegistrationDTO;
-import langcontrol.app.account.AccountRepository;
-import langcontrol.app.account.AccountServiceImpl;
 import langcontrol.app.exception.UsernameAlreadyExistsException;
 import langcontrol.app.security.DefinedRoleValue;
 import langcontrol.app.security.Role;
 import langcontrol.app.security.RoleRepository;
-import langcontrol.app.user_settings.UserSettingsRepository;
+import langcontrol.app.usersettings.UserSettingsRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

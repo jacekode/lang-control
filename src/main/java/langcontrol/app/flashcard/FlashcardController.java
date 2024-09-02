@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import langcontrol.app.deck.Deck;
 import langcontrol.app.deck.DeckService;
-import langcontrol.app.user_settings.UserSettings;
-import langcontrol.app.user_settings.UserSettingsService;
+import langcontrol.app.usersettings.UserSettings;
+import langcontrol.app.usersettings.UserSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,13 +16,15 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class FlashcardController {
 
-    private final FlashcardService flashcardService;
+    private final WordFlashcardService wordFlashcardService;
     private final DeckService deckService;
     private final UserSettingsService userSettingsService;
 
     @Autowired
-    public FlashcardController(FlashcardService flashcardService, DeckService deckService, UserSettingsService userSettingsService) {
-        this.flashcardService = flashcardService;
+    public FlashcardController(WordFlashcardService wordFlashcardService,
+                               DeckService deckService,
+                               UserSettingsService userSettingsService) {
+        this.wordFlashcardService = wordFlashcardService;
         this.deckService = deckService;
         this.userSettingsService = userSettingsService;
     }
@@ -30,7 +32,7 @@ public class FlashcardController {
     @PostMapping("/card/{id}/delete")
     public String deleteFlashcard(@Min(1) @PathVariable("id") long flashcardId,
                                   @Min(1) @RequestParam("deckId") long deckId) {
-        flashcardService.deleteFlashcard(flashcardId);
+        wordFlashcardService.deleteFlashcard(flashcardId);
         return "redirect:/deck/" + deckId + "/cards";
     }
 
@@ -47,15 +49,15 @@ public class FlashcardController {
 
     @PostMapping("/add-card")
     public String createFlashcard(@Min(1) @RequestParam("deckid") long deckId,
-                                     @Valid @ModelAttribute("newFlashcard") FlashcardCreationDTO createCardDto) {
-        flashcardService.createNewFlashcard(deckId, createCardDto);
+                                  @Valid @ModelAttribute("newFlashcard") FlashcardCreationDTO createCardDto) {
+        wordFlashcardService.createNewFlashcard(deckId, createCardDto);
         return "redirect:/add-card?deckid=" + deckId;
     }
 
     @PostMapping("/add-card/zenmode")
     public String createFlashcardWithZenMode(@Min(1) @RequestParam("deckid") long deckId,
                                              @Valid @ModelAttribute("newCardZenMode") FlashcardZenModeCreationDTO dto) {
-        flashcardService.createNewFlashcardZenMode(deckId, dto);
+        wordFlashcardService.createNewFlashcardZenMode(deckId, dto);
         return "redirect:/add-card?deckid=" + deckId;
     }
 }

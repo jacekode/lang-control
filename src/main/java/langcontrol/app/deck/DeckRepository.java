@@ -1,6 +1,6 @@
 package langcontrol.app.deck;
 
-import langcontrol.app.user_profile.UserProfile;
+import langcontrol.app.userprofile.UserProfile;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 

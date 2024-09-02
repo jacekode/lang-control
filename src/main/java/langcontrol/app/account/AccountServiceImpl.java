@@ -7,13 +7,13 @@ import langcontrol.app.account.rest.UpdateUsernameDTO;
 import langcontrol.app.exception.GeneralNotFoundException;
 import langcontrol.app.exception.UsernameAlreadyExistsException;
 import langcontrol.app.exception.UsernamesTheSameException;
-import langcontrol.app.exception.WrongPasswordException;
+import langcontrol.app.exception.PasswordMismatchException;
 import langcontrol.app.security.DefinedRoleValue;
 import langcontrol.app.security.Role;
 import langcontrol.app.security.RoleRepository;
-import langcontrol.app.user_profile.UserProfile;
-import langcontrol.app.user_settings.UserSettings;
-import langcontrol.app.user_settings.UserSettingsRepository;
+import langcontrol.app.userprofile.UserProfile;
+import langcontrol.app.usersettings.UserSettings;
+import langcontrol.app.usersettings.UserSettingsRepository;
 import langcontrol.app.util.PrincipalRetriever;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,7 +35,9 @@ public class AccountServiceImpl implements AccountService {
     private final UserSettingsRepository userSettingsRepository;
 
     @Autowired
-    public AccountServiceImpl(AccountRepository accountRepository, RoleRepository roleRepository, PasswordEncoder encoder,
+    public AccountServiceImpl(AccountRepository accountRepository,
+                              RoleRepository roleRepository,
+                              PasswordEncoder encoder,
                               UserSettingsRepository userSettingsRepository) {
         this.accountRepository = accountRepository;
         this.encoder = encoder;
@@ -50,7 +52,6 @@ public class AccountServiceImpl implements AccountService {
         if (accountOptional.isPresent()) {
             throw new UsernameAlreadyExistsException("The account with the given username already exists.");
         }
-
         Optional<Role> roleOptional = roleRepository.findByValue(DefinedRoleValue.USER.getValue());
         Role userRole;
         if (roleOptional.isEmpty()) {
@@ -59,7 +60,6 @@ public class AccountServiceImpl implements AccountService {
         } else {
             userRole = roleOptional.get();
         }
-
         List<Role> roles = List.of(userRole);
 
         Account accountToCreate = new Account(
@@ -76,7 +76,7 @@ public class AccountServiceImpl implements AccountService {
                 null,
                 registrationDTO.getName());
 
-        UserSettings userSettings = new UserSettings(null, false, false);
+        UserSettings userSettings = UserSettings.withDefaults();
         userSettingsRepository.save(userSettings);
 
         userProfileToCreate.setUserSettings(userSettings);
@@ -109,9 +109,8 @@ public class AccountServiceImpl implements AccountService {
     public AccountOverviewDTO updatePassword(UpdatePasswordDTO dto) {
         Account currentAccount = this.retrieveCurrentAccount();
         if (!encoder.matches(dto.getCurrentPassword(), currentAccount.getPassword())) {
-            throw new WrongPasswordException("Password is incorrect.");
+            throw new PasswordMismatchException("Password is incorrect.");
         }
-
         currentAccount.setPassword(encoder.encode(dto.getNewPassword()));
         accountRepository.save(currentAccount);
         return AccountOverviewDTO.fromEntity(currentAccount);
@@ -122,7 +121,7 @@ public class AccountServiceImpl implements AccountService {
     public void deleteAccount(DeleteAccountDTO dto) {
         Account currentAccount = this.retrieveCurrentAccount();
         if (!encoder.matches(dto.getPassword(), currentAccount.getPassword())) {
-            throw new WrongPasswordException("Password is incorrect.");
+            throw new PasswordMismatchException("Password is incorrect.");
         }
         accountRepository.deleteById(currentAccount.getId());
         SecurityContextHolder.getContext().setAuthentication(null);

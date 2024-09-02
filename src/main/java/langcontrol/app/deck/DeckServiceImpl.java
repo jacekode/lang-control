@@ -4,12 +4,10 @@ import langcontrol.app.deck.rest.DeckDetailsDTO;
 import langcontrol.app.exception.AccessNotAllowedException;
 import langcontrol.app.exception.GeneralNotFoundException;
 import langcontrol.app.exception.DeckCreationException;
-import langcontrol.app.flashcard.Flashcard;
-import langcontrol.app.flashcard.FlashcardService;
-import langcontrol.app.account.Account;
-import langcontrol.app.user_profile.UserProfile;
-import langcontrol.app.user_profile.UserProfileService;
-import langcontrol.app.util.PrincipalRetriever;
+import langcontrol.app.flashcard.WordFlashcard;
+import langcontrol.app.flashcard.WordFlashcardService;
+import langcontrol.app.userprofile.UserProfile;
+import langcontrol.app.userprofile.UserProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,20 +22,20 @@ public class DeckServiceImpl implements DeckService {
 
     private final DeckRepository deckRepository;
     private final UserProfileService userProfileService;
-    private final FlashcardService flashcardService;
+    private final WordFlashcardService wordFlashcardService;
 
     @Autowired
     public DeckServiceImpl(DeckRepository deckRepository, UserProfileService userProfileService,
-                           FlashcardService flashcardService) {
+                           WordFlashcardService wordFlashcardService) {
         this.deckRepository = deckRepository;
         this.userProfileService = userProfileService;
-        this.flashcardService = flashcardService;
+        this.wordFlashcardService = wordFlashcardService;
     }
 
     @Transactional
     @Override
     public void createNewDeck(Deck deckToCreate) {
-        if (deckToCreate.getSourceLanguage() == deckToCreate.getTargetLanguage()) {
+        if (deckToCreate.getSourceLang() == deckToCreate.getTargetLang()) {
             throw new DeckCreationException("Source language and target language cannot be the same.");
         }
         UserProfile currentUserProfile = userProfileService.retrieveCurrentUserProfile();
@@ -58,10 +56,9 @@ public class DeckServiceImpl implements DeckService {
     @Transactional
     @Override
     public Deck getDeckById(Long deckId) {
-        Account currentAccount = PrincipalRetriever.retrieveAccount();
-
+        UserProfile currentProfile = userProfileService.retrieveCurrentUserProfile();
         Deck foundDeck = deckRepository.findById(deckId).orElseThrow(GeneralNotFoundException::new);
-        if (!Objects.equals(foundDeck.getUserProfile().getId(), currentAccount.getUserProfile().getId())) {
+        if (!Objects.equals(foundDeck.getUserProfile().getId(), currentProfile.getId())) {
             throw new AccessNotAllowedException("You don't have permission to perform this action.");
         }
         return foundDeck;
@@ -77,18 +74,16 @@ public class DeckServiceImpl implements DeckService {
     @Transactional
     @Override
     public DeckDetailsDTO extractDeckDetails(long deckId, String zoneId) {
-        Account currentAccount = PrincipalRetriever.retrieveAccount();
+        UserProfile currentProfile = userProfileService.retrieveCurrentUserProfile();
         Deck deck = deckRepository.findById(deckId).orElseThrow(GeneralNotFoundException::new);
-        if (!Objects.equals(deck.getUserProfile().getId(), currentAccount.getUserProfile().getId())) {
+        if (!Objects.equals(deck.getUserProfile().getId(), currentProfile.getId())) {
             throw new AccessNotAllowedException("You don't have permission to view this data.");
         }
-        int totalCardsNum = deck.getFlashcards().size();
-        Deque<Flashcard> cardsForReview = flashcardService.fetchReadyForReviewShuffledWithLimit(deckId,
-                zoneId, Integer.MAX_VALUE);
-        int cardsForReviewNum = cardsForReview.size();
-
-        return new DeckDetailsDTO(deck.getId(), deck.getName(), totalCardsNum, cardsForReviewNum);
+        int totalCardNum = deck.getFlashcards().size();
+        Deque<WordFlashcard> readyForView = wordFlashcardService.fetchShuffleReadyForView(
+                deckId, Integer.MAX_VALUE
+        );
+        int readyForViewNum = readyForView.size();
+        return new DeckDetailsDTO(deck.getId(), deck.getName(), totalCardNum, readyForViewNum);
     }
-
-
 }

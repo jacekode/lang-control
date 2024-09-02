@@ -47,5 +47,4 @@ public class AccountRegistrationDTO {
     @Size(max = 50, message = NAME_TOO_LONG_MSG)
     @Pattern(regexp = "^[a-zA-Z]*$", message = NAME_PATTERN_MSG)
     private String name;
-
 }

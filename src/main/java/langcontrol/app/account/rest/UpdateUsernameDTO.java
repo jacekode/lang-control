@@ -13,7 +13,6 @@ public class UpdateUsernameDTO {
     private static final String USERNAME_PATTERN_MSG = "Username may only consist of letters, digits and underscores " +
             "but not two underscores next to each other.";
 
-
     @NotNull(message = USERNAME_INVALID_MSG)
     @NotBlank(message = USERNAME_INVALID_MSG)
     @Size(max = 30, message = USERNAME_TOO_LONG_MSG)

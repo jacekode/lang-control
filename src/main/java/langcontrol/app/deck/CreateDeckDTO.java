@@ -20,10 +20,10 @@ public class CreateDeckDTO {
     private String name;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+//    @Enumerated(EnumType.STRING)
     private LanguageCode targetLanguage;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+//    @Enumerated(EnumType.STRING)
     private LanguageCode sourceLanguage;
 }

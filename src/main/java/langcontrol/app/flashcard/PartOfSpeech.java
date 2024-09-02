@@ -2,6 +2,9 @@ package langcontrol.app.flashcard;
 
 import java.util.Optional;
 
+/**
+ * Represents the part of speech of a single word in terms of grammar.
+ */
 public enum PartOfSpeech {
 
     NOUN("noun"), VERB("verb"), ADJECTIVE("adjective"),

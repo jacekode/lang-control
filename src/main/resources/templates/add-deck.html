@@ -23,7 +23,7 @@
               
               <div class="mb-3">
                 <label for="source-lang-select" class="form-label">Your native language: </label>
-                <select id="source-lang-select" class="form-select" name="sourceLanguage" th:field="*{sourceLanguage}" required>
+                <select id="source-lang-select" class="form-select" name="sourceLang" th:field="*{sourceLang}" required>
                   <option th:each="lang : ${languageCodes}" th:value="${lang.code}" th:text="${lang.fullLanguageName}">
                     English
                   </option>
@@ -32,7 +32,7 @@
 
               <div class="mb-4">
                 <label for="target-lang-select" class="form-label">The language you're learning: </label>
-                <select id="target-lang-select" class="form-select" name="targetLanguage" th:field="*{targetLanguage}" required>
+                <select id="target-lang-select" class="form-select" name="targetLang" th:field="*{targetLang}" required>
                   <option th:each="lang : ${languageCodes}" th:value="${lang.code}" th:text="${lang.fullLanguageName}">
                     German
                   </option>

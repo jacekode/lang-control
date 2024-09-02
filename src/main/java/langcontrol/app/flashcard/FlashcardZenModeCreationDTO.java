@@ -10,6 +10,6 @@ public class FlashcardZenModeCreationDTO {
 
     @NotBlank
     @Size(max = 80)
-    private String back;
+    private String targetWord;
     private PartOfSpeech partOfSpeech;
 }
