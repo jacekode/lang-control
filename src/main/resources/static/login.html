@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LangControl</title>
+
+  <script type="module" src="/scripts/global.js"></script>
+  <script type="module" src="/scripts/login.js"></script>
+  <link rel="stylesheet" type="text/css" href="/styles/global.css">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <img src="#" alt="Logo" id="logo">
+    <h1 id="brand-name">LangControl</h1>
+    <nav id="nav-links">
+      <div id="main-navlinks" class="pill-menu">
+        <ul>
+          <li><a href="/"><img src="/icons/nav-home.svg" class="nav-icon"><span class="nav-label">Home</span></a></li>
+          <li><a href="/create/card"><img src="/icons/nav-create.svg" class="nav-icon"><span class="nav-label">Create</span></a></li>
+          <li><a href="/browse"><img src="/icons/nav-search.svg" class="nav-icon"><span class="nav-label">Browse</span></a></li>
+          <li><a href="/settings/app"><img src="/icons/nav-settings.svg" class="nav-icon"><span class="nav-label">Settings</span></a></li>
+        </ul>
+      </div>
+      <div id="login-register-navlinks" class="anon-navlinks pill-menu">
+        <ul>
+          <li><a href="/register"><img src="/icons/register.svg" class="nav-icon"><span class="nav-label">Register</span></a></li>
+          <li><a href="/login"><img src="/icons/login.svg" class="nav-icon"><span class="nav-label">Login</span></a></li>
+        </ul>
+      </div>
+      <div class="auth-navlinks">
+        <ul>
+          <li><a href="javascript:void(0)" class="logout-btn"><img src="/icons/logout.svg" class="nav-icon"><span class="nav-label">Logout</span></a></li>
+        </ul>
+      </div>
+      <div id="account-menu" class="auth-navlinks dropdown">
+        <button class="dropdown-btn"><img src="/icons/profile.svg" class="nav-icon"></button>
+        <div class="dropdown-content">
+          <button class="logout-btn">Logout</button>
+        </div>
+      </div>
+    </nav>
+    <button id="menu-btn"><img src="/icons/menu.svg" alt="Menu"></button>
+  </header>
+
+  <main>
+
+    <div class="centered-content">
+
+      <div class="form-container auth-form">
+        <form action="/api/auth/login" method="post" id="login-form">
+          <h2>Log into your account</h2>
+          <div class="feedback-msg"></div>
+          <div>
+            <label for="username">Username:</label>
+            <input type="text" name="username" id="username" required minlength="4" maxlength="30" placeholder="Username" autofocus>
+          </div>
+          <div>
+            <label for="pwd">Password:</label>
+            <input type="password" name="password" id="pwd" required minlength="8" maxlength="50" placeholder="Password">
+          </div>
+          <button type="submit" class="btn-primary">Log in</button>
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+</body>
+</html>

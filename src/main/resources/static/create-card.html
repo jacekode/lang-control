@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LangControl</title>
+
+  <script type="module" src="/scripts/global.js"></script>
+  <script type="module" src="/scripts/create-card.js"></script>
+  <link rel="stylesheet" type="text/css" href="/styles/global.css">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <img src="#" alt="Logo" id="logo">
+    <h1 id="brand-name">LangControl</h1>
+    <nav id="nav-links">
+      <div id="main-navlinks" class="pill-menu">
+        <ul>
+          <li><a href="/"><img src="/icons/nav-home.svg" class="nav-icon"><span class="nav-label">Home</span></a></li>
+          <li><a href="/create/card"><img src="/icons/nav-create.svg" class="nav-icon"><span class="nav-label">Create</span></a></li>
+          <li><a href="/browse"><img src="/icons/nav-search.svg" class="nav-icon"><span class="nav-label">Browse</span></a></li>
+          <li><a href="/settings/app"><img src="/icons/nav-settings.svg" class="nav-icon"><span class="nav-label">Settings</span></a></li>
+        </ul>
+      </div>
+      <div id="login-register-navlinks" class="anon-navlinks pill-menu">
+        <ul>
+          <li><a href="/register"><img src="/icons/register.svg" class="nav-icon"><span class="nav-label">Register</span></a></li>
+          <li><a href="/login"><img src="/icons/login.svg" class="nav-icon"><span class="nav-label">Login</span></a></li>
+        </ul>
+      </div>
+      <div class="auth-navlinks">
+        <ul>
+          <li><a href="javascript:void(0)" class="logout-btn"><img src="/icons/logout.svg" class="nav-icon"><span class="nav-label">Logout</span></a></li>
+        </ul>
+      </div>
+      <div id="account-menu" class="auth-navlinks dropdown">
+        <button class="dropdown-btn"><img src="/icons/profile.svg" class="nav-icon"></button>
+        <div class="dropdown-content">
+          <button class="logout-btn">Logout</button>
+        </div>
+      </div>
+    </nav>
+    <button id="menu-btn"><img src="/icons/menu.svg" alt="Menu"></button>
+  </header>
+
+  <main>
+
+    <div class="tab-subnav">
+      <a href="#" class="active">Add card</a>
+      <a href="/create/deck">Add deck</a>
+    </div>
+
+    <div class="form-container create-form">
+      <form action="/api/cards" method="post" id="create-card-form">
+        <h2>Create a flashcard</h2>
+        <p id="feedback-msg"></p>
+        <div>
+          <label for="deck-select">Choose a deck:</label>
+          <select name="deckId" id="deck-select">
+            <!-- <option value="1">Dummy deck</option> -->
+          </select>
+        </div>
+        <div>
+          <label for="source-word">The target word (in <span id="target-lang">...</span>):</label>
+          <input type="text" name="targetWord" id="target-word" maxlength="80" autofocus>
+        </div>
+        <button type="button" id="translate-btn" class="btn-primary">Translate target word</button>
+        <div>
+          <label for="translated-word">The word translation (in <span id="source-lang">...</span>):</label>
+          <input type="text" name="translatedWord" id="translated-word" maxlength="80">
+        </div>
+        <div id="dictionary-container">
+          <!-- <button type="button" class="dictionary-btn">Dummy btn</button> -->
+        </div>
+        <div>
+          <label for="pos-select">Part of speech:</label>
+          <select name="partOfSpeech" id="pos-select">
+            <option value="noun">Noun</option>
+            <option value="adjective">Adjective</option>
+            <option value="verb">Verb</option>
+            <option value="adverb">Adverb</option>
+            <option value="phrase">Phrase</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <input type="checkbox" value="true" name="dynamicExamples" id="dynamic-examples">
+          <label for="dynamic-examples">Dynamic examples</label>
+        </div>
+        <button type="button" id="generate-btn" class="btn-primary">Generate examples</button>
+        <div>
+          <label for="target-example">Target example:</label>
+          <textarea name="targetExample" id="target-example" class="example-input"
+            placeholder="An example sentence for the target word." rows="3" cols="25" maxlength="300"></textarea>
+        </div>
+        <div>
+          <label for="translated-example">Translated example:</label>
+          <textarea name="translatedExample" id="translated-example" class="example-input"
+            placeholder="An example sentence for the word translation." rows="3" cols="25" maxlength="300"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+    </div>
+
+  </main>
+
+</body>
+
+</html>

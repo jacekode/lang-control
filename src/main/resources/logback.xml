@@ -1,0 +1,23 @@
+<configuration>
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} [%thread] %highlight(%-5level) %magenta(%logger) :: %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+<!--        <appender-ref ref="CONSOLE" />-->
+    </root>
+
+    <logger name="dev.jlynx" level="TRACE" />
+<!--    <logger name="org.springframework" level="OFF"/>-->
+<!--    <logger name="org.hibernate" level="OFF"/>-->
+<!--    <logger name="org.apache" level="OFF"/>-->
+<!--    <logger name="com.zaxxer" level="OFF"/>-->
+
+</configuration>
