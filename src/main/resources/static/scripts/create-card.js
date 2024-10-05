@@ -1,7 +1,9 @@
 "use strict";
 
 import { formDataToJson, getSelectedOption } from "./modules/utils.js";
-import { callApi, generateSentences, translateText, lookupDictionary } from "./modules/client.js";
+import { callApi, generateSentences, translateText, lookupDictionary, getUserSettings } from "./modules/client.js";
+
+const dynExCheckbox = document.querySelector("#dynamic-examples");
 
 document.addEventListener("DOMContentLoaded", () => {
   const deckSelect = document.querySelector("#deck-select");
@@ -27,6 +29,12 @@ document.addEventListener("DOMContentLoaded", () => {
     .catch((err) => {
       throw new Error("Failed to fetch decks");
     });
+  getUserSettings()
+    .then((body) => {
+      dynExCheckbox.checked = body.dynamicSentencesOnByDefault;
+      dynExCheckbox.dispatchEvent(new Event("input"));
+    })
+    .catch((err) => console.error(err));
 });
 
 const deckSelect = document.getElementById("deck-select");
@@ -58,8 +66,7 @@ createCardForm.addEventListener("submit", (e) => {
     });
 });
 
-const dynExCheckbox = document.querySelector("#dynamic-examples");
-dynExCheckbox.addEventListener("click", (e) => {
+dynExCheckbox.addEventListener("input", (e) => {
   if (e.currentTarget.checked) {
     document.querySelectorAll(".example-input, #generate-btn").forEach((el) => {
       el.disabled = true;
