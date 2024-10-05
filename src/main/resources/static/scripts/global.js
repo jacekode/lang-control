@@ -69,7 +69,8 @@ logoutBtns.forEach(el => {
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  const authNavlinks = document.querySelectorAll(".auth-navlinks:not(#account-menu)");
+  // const authNavlinks = document.querySelectorAll(".auth-navlinks:not(#account-menu)");
+  const authNavlinks = document.querySelectorAll(".auth-navlinks");
   const anonNavlinks = document.querySelectorAll(".anon-navlinks");
   if (sessionStorage.getItem(LOGGED_IN_SKEY) === "true") {
     anonNavlinks.forEach(elem => {
@@ -85,6 +86,9 @@ document.addEventListener("DOMContentLoaded", () => {
     authNavlinks.forEach(elem => {
       elem.style.display = "none";
     });
+  }
+  if (window.innerWidth < 768) {
+    document.querySelector("#account-menu").style.display = "none";
   }
 });
 
