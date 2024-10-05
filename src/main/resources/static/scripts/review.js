@@ -4,6 +4,7 @@ import { callApi, generateSentences, translateText } from "./modules/client.js";
 import { rsCompletedParam, rsErrorParam, RC_SKEY, RR_SKEY } from "./modules/constants.js";
 
 document.addEventListener("DOMContentLoaded", (e) => {
+  resetContainerState();
   const curCard = getFirstCard();
   fillReviewContainer(curCard);
   document.querySelector("#remaining-counter").textContent = sessionStorage.getItem(RR_SKEY);
@@ -12,19 +13,19 @@ document.addEventListener("DOMContentLoaded", (e) => {
 
 const answerBtn = document.querySelector("#answer-btn");
 answerBtn.addEventListener("click", (e) => {
-  e.currentTarget.hidden = true;
-  document.querySelector("#divider").hidden = false;
-  document.querySelector("#card-back").hidden = false;
+  e.currentTarget.style.display = "none";
+  document.querySelector(".divider").style.display = "block";
+  document.querySelector("#card-back").style.display = "block";
   const curCard = getFirstCard();
   if (curCard.inLearnMode) {
-    document.querySelector("#learn-mode-ratings").hidden = false;
+    document.querySelector("#learn-mode-ratings").style.display = "flex";
   } else {
-    document.querySelector("#review-mode-ratings").hidden = false;
+    document.querySelector("#review-mode-ratings").style.display = "flex";
   }
   if (!!curCard.targetExample ||
       !!curCard.translatedExample ||
       curCard.dynamicExamples) {
-    document.querySelector("#example").hidden = false;
+    document.querySelector("#example").style.display = "block";
   }
   showIntervalForecasts(curCard.id, curCard.inLearnMode);
 });
@@ -159,12 +160,12 @@ async function generateDynamicExamples(card) {
 }
 
 function resetContainerState() {
-  document.querySelector("#answer-btn").hidden = false;
-  document.querySelector("#divider").hidden = true;
-  document.querySelector("#card-back").hidden = true;
-  document.querySelector("#learn-mode-ratings").hidden = true;
-  document.querySelector("#review-mode-ratings").hidden = true;
-  document.querySelector("#example").hidden = true;
+  document.querySelector("#answer-btn").style.display = "block";
+  document.querySelector(".divider").style.display = "none";
+  document.querySelector("#card-back").style.display = "none";
+  document.querySelector("#learn-mode-ratings").style.display = "none";
+  document.querySelector("#review-mode-ratings").style.display = "none";
+  document.querySelector("#example").style.display = "none";
   document.querySelector("#target-example").textContent = "...";
   document.querySelector("#translated-example").textContent = "...";
 }

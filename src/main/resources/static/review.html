@@ -54,15 +54,15 @@
 
       <div id="review-container">
         <div id="review-header">
-          <p><span class="header-label">Deck</span><span id="deck-name">...</span></p>
-          <p><span class="header-label">Remaining</span><span id="remaining-counter">...</span></p>
-          <p><span class="header-label">Session</span><span id="session-counter">...</span></p>
+          <p class="header-item"><span class="header-label">Deck</span><span id="deck-name">...</span></p>
+          <p class="header-item"><span class="header-label">Remaining</span><span id="remaining-counter">...</span></p>
+          <p class="header-item"><span class="header-label">Session</span><span id="session-counter">...</span></p>
         </div>
         <div id="review-body">
           <p id="card-front">...</p>
-          <div class="divider" hidden></div>
-          <p id="card-back" hidden>...</p>
-          <div id="example" hidden>
+          <div class="divider"></div>
+          <p id="card-back">...</p>
+          <div id="example">
             <p>Example:</p>
             <p id="target-example">...</p>
             <p id="translated-example">...</p>
@@ -70,7 +70,7 @@
         </div>
         <div id="review-footer">
           <button id="answer-btn" class="btn-primary">Show answer</button>
-          <div id="learn-mode-ratings" hidden>
+          <div id="learn-mode-ratings">
             <button id="dknow-btn" class="btn-rating" data-url-value="dknow">
               <div>Don't know</div>
               <div id="dknow-forecast">...</div>
@@ -80,7 +80,7 @@
               <div id="know-forecast">...</div>
             </button>
           </div>
-          <div id="review-mode-ratings" hidden>
+          <div id="review-mode-ratings">
             <button id="for-btn" class="btn-rating" data-url-value="forgot">
               <div>Forgot</div>
               <div id="for-forecast">...</div>

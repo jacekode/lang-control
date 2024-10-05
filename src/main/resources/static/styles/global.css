@@ -627,6 +627,7 @@ button[type="submit"] {
   padding: 4px 10px;
   text-decoration: none;
   transition: .4s ease;
+  color: black;
 }
 
 .edit-deck:hover {
@@ -726,7 +727,8 @@ button[type="submit"] {
   padding: 10px 16px;
 }
 
-#review-header p {
+.header-item {
+  flex: 1 1 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
