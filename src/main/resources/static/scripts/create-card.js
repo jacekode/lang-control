@@ -109,6 +109,7 @@ function translateExample(sentence) {
 
 const translateBtn = document.getElementById("translate-btn");
 translateBtn.addEventListener("click", () => {
+  document.querySelector("#dictionary-container").innerHTML = "";
   const targetWord = document.getElementById("target-word").value;
   const langFrom = getSelectedOption("deck-select").dataset.targetLang;
   const langTo = getSelectedOption("deck-select").dataset.sourceLang;

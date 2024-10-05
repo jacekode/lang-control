@@ -274,6 +274,33 @@ main {
   transition: .6s ease;
 }
 
+.dictionary-btn {
+  border: 1px solid var(--secondary-clr);
+  border-radius: 100px;
+  color: black;
+  background-color: white;
+  padding: 8px 12px;
+  margin: 2px;
+  transition: .6s ease;
+}
+
+.dictionary-btn.active {
+  background-color: var(--secondary-clr);
+  transition: .6s ease;
+}
+
+.dictionary-btn:hover {
+  background-color: var(--neutral-lighter-clr);
+}
+
+.dictionary-btn:active {
+  border-color: var(--primary-clr);
+}
+
+.dictionary-btn:focus {
+  outline: none;
+}
+
 
 /* || Navbar styling */
 header {
