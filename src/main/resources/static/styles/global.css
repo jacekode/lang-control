@@ -25,6 +25,7 @@
 
   --radius-bg: 40px;
   --radius-sm: 15px;
+  --radius-dropdown: 25px;
 
   --body-pad-inline: 10px;
   --outer-space: 15px;
@@ -142,25 +143,31 @@ button:disabled {
   right: 0;
   background-color: white;
   border: 1px solid var(--neutral-darker-clr);
-  border-radius: var(--radius-bg);
+  border-radius: var(--radius-dropdown);
   box-shadow: 2px 2px 8px #8a8a8a;
   z-index: 99;
 }
 
-.dropdown-content * {
+.dropdown-item {
   color: black;
   padding: 12px 35px;
   text-decoration: none;
   font-size: 1.1rem;
   background-color: white;
   border: none;
-  border-radius: var(--radius-bg);
+  border-radius: 100px;
   display: block;
   transition: .6s ease;
+  width: 100%;
 }
 
-.dropdown-content *:hover {
+.dropdown-item:hover {
   background-color: var(--neutral-light-clr);
+  color: var(--primary-clr);
+}
+
+.dropdown-item:hover * {
+  color: inherit;
 }
 
 main {
@@ -388,7 +395,7 @@ header {
   margin: 0;
 }
 
-#nav-links a {
+nav a {
   text-decoration: none;
   color: black;
   transition: color .3s linear;
