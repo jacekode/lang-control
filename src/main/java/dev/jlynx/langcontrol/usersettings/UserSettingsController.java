@@ -31,7 +31,7 @@ public class UserSettingsController {
 
     @PutMapping
     public ResponseEntity<?> updateSettings(@RequestBody UpdateUserSettingsRequest body) {
-        userSettingsService.updateCurrentUserSettings(body);
-        return new ResponseEntity<>(HttpStatus.OK);
+        UserSettingsOverview overview = userSettingsService.updateCurrentUserSettings(body);
+        return ResponseEntity.ok(overview);
     }
 }

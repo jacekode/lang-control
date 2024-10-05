@@ -29,9 +29,11 @@ const RC_SKEY = "reviewCards";
 const RR_SKEY = "remainingReviews";
 /**
  * Session storage key for specifying whether an account is currently authenticated or not.
- * @type {boolean}
  */
 const LOGGED_IN_SKEY = "loggedIn";
+/**
+ * Session storage key for storing current user settings object.
+ */
+const USER_SETTINGS_SKEY = "userSettings";
 
-
-export { rsErrorParam, rsCompletedParam, RC_SKEY, RR_SKEY, LOGGED_IN_SKEY, logoutParam, accountDelParam, errorParam };
+export { rsErrorParam, rsCompletedParam, logoutParam, accountDelParam, errorParam, RC_SKEY, RR_SKEY, LOGGED_IN_SKEY, USER_SETTINGS_SKEY };

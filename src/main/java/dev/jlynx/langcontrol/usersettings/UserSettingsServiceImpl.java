@@ -31,11 +31,12 @@ public class UserSettingsServiceImpl implements UserSettingsService {
 
     @Transactional
     @Override
-    public void updateCurrentUserSettings(UpdateUserSettingsRequest body) {
+    public UserSettingsOverview updateCurrentUserSettings(UpdateUserSettingsRequest body) {
         UserProfile curProfile = userProfileService.retrieveCurrentProfileEntity();
         UserSettings curSettings = curProfile.getUserSettings();
         curSettings.setDynamicSentencesOnByDefault(body.dynamicSentencesOnByDefault());
         curSettings.setZenModeEnabled(body.zenModeEnabled());
         userSettingsRepository.save(curSettings);
+        return UserSettingsOverview.fromEntity(curSettings);
     }
 }

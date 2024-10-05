@@ -1,11 +1,11 @@
 "use strict";
 
-import { callApi, callApiExpectNoBody } from "./modules/client.js";
+import { callApi, callApiExpectNoBody, getUserSettings } from "./modules/client.js";
 import { formDataToJson } from "./modules/utils.js";
+import { USER_SETTINGS_SKEY } from "./modules/constants.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const url = "/settings";
-  callApi(url)
+  getUserSettings()
     .then(body => {
       const defDynExCheckbox = document.getElementById("default-dynamic-examples");
       defDynExCheckbox.checked = body.dynamicSentencesOnByDefault;
@@ -28,9 +28,10 @@ appSettingsForm.addEventListener("submit", (e) => {
     }
   };
   const url = "/settings";
-  callApiExpectNoBody(url, options)
-    .then(() => {
+  callApi(url, options)
+    .then((body) => {
       document.querySelector(".feedback-msg").textContent = "Settings updated successfully!";
+      sessionStorage.setItem(USER_SETTINGS_SKEY, JSON.stringify(body));
       updateState();
     })
     .catch(err => console.error(err));

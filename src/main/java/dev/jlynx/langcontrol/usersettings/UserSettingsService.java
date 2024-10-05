@@ -7,5 +7,5 @@ public interface UserSettingsService {
 
     UserSettingsOverview retrieveCurrentUserSettings();
 
-    void updateCurrentUserSettings(UpdateUserSettingsRequest body);
+    UserSettingsOverview updateCurrentUserSettings(UpdateUserSettingsRequest body);
 }

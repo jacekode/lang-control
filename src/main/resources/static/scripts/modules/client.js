@@ -1,3 +1,5 @@
+import { USER_SETTINGS_SKEY } from "./constants.js";
+
 /**
  * Prefix to the LangControl server REST API.
  */
@@ -8,7 +10,7 @@ const apiPref = "/api";
  * 
  * @param {string} url - a relative url to one of the LangControl REST API endpoints
  * @param {Object} options - optional Fetch API `fetch()`'s options object
- * @returns {Promise} a response body parsed to an object
+ * @returns a response body parsed to an object
  */
 async function callApi(url, options) {
   let response;
@@ -31,7 +33,7 @@ async function callApi(url, options) {
  * 
  * @param {string} url - a relative url to one of the LangControl REST API endpoints
  * @param {Object} options - optional Fetch API `fetch()`'s options object
- * @returns {number} the status code of the response
+ * @returns {Promise<number>} the status code of the response
  */
 async function callApiExpectNoBody(url, options) {
   let response;
@@ -56,7 +58,7 @@ async function callApiExpectNoBody(url, options) {
  * @param {string} lang - ISO 639-1 language code of the keyword
  * @param {string} pos - grammatical part of speech of the keyword
  * @param {number} num - the number of sentences to generate (min 1, max 3)
- * @returns {Object} a response body parsed object
+ * @returns a response body object
  */
 async function generateSentences(keyword, lang, pos, num) {
   const urlParams = new URLSearchParams();
@@ -77,7 +79,7 @@ async function generateSentences(keyword, lang, pos, num) {
  * @param {string} text - the text to be translated; max 240 characters
  * @param {string} to - ISO 639-1 language code of the desired translation language
  * @param {string} from - ISO 639-1 language code of the text to translate
- * @returns {Object} a response body object
+ * @returns a response body object
  */
 async function translateText(text, to, from) {
   const reqBody = {
@@ -106,6 +108,7 @@ async function translateText(text, to, from) {
  * @param {string} from the ISO 639-1 language code of the source word
  * @param {string} to the ISO 639-1 language code of the desired translations' language
  * @param {string} pos the grammatical part of speech of the source word
+ * @returns a response body object
  */
 async function lookupDictionary(word, from, to, pos) {
   const urlParams = new URLSearchParams();
@@ -120,4 +123,25 @@ async function lookupDictionary(word, from, to, pos) {
   return resBody;
 }
 
-export { callApi, generateSentences, translateText, lookupDictionary, callApiExpectNoBody };
+/**
+ * Calls the LangControl API to fetch the current user settings object.
+ * 
+ * @returns a user settings object
+ */
+async function getUserSettings() {
+  if (sessionStorage.getItem(USER_SETTINGS_SKEY)) {
+    return JSON.parse(sessionStorage.getItem(USER_SETTINGS_SKEY));
+  }
+
+  const url = "/settings";
+  let resBody;
+  try {
+    resBody = await callApi(url);
+    sessionStorage.setItem(USER_SETTINGS_SKEY, JSON.stringify(resBody));
+  } catch (err) {
+    console.error(err);
+  }
+  return resBody;
+}
+
+export { callApi, generateSentences, translateText, lookupDictionary, callApiExpectNoBody, getUserSettings };
