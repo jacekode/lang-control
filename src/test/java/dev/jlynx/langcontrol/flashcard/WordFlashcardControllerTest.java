@@ -1,150 +1,216 @@
 package dev.jlynx.langcontrol.flashcard;
 
-import dev.jlynx.langcontrol.deck.DeckService;
-import dev.jlynx.langcontrol.deck.Deck;
-import dev.jlynx.langcontrol.lang.LanguageCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.jlynx.langcontrol.flashcard.dto.CreateWordFlashcardRequest;
-import dev.jlynx.langcontrol.usersettings.UserSettings;
-import dev.jlynx.langcontrol.usersettings.UserSettingsService;
+import dev.jlynx.langcontrol.flashcard.dto.WordFlashcardOverviewResponse;
+import dev.jlynx.langcontrol.lang.LanguageCode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WordFlashcardController.class)
 class WordFlashcardControllerTest {
 
+    private static final String baseUrl = "/api/cards";
+    private static final String username = "username";
+
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private DeckService mockedDeckService;
+    @Autowired
+    private ObjectMapper json;
 
     @MockBean
     private WordFlashcardService mockedWordFlashcardService;
 
-    @MockBean
-    private UserSettingsService mockedUserSettingsService;
 
-
-    @WithMockUser(username = "username")
-    @Test
-    void getAddCardToDeckPage_ShouldReturnAddCardPage() throws Exception {
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @MethodSource("validCreateWordFlashcardRequests")
+    void createFlashcard_ShouldCreateFlashcard_WhenRequestBodyIsCorrect(CreateWordFlashcardRequest reqBody) throws Exception {
         // given
-        long testDeckId = 94L;
-        Deck testDeck = new Deck(testDeckId, "Test Deck", null, LanguageCode.ENGLISH,
-                LanguageCode.GERMAN, new ArrayList<>());
-        UserSettings testUserSettings = new UserSettings(16L, true, false);
-        given(mockedDeckService.getDeckById(testDeckId)).willReturn(testDeck);
-        given(mockedUserSettingsService.retrieveCurrentUserSettings()).willReturn(testUserSettings);
+        WordFlashcardOverviewResponse response = new WordFlashcardOverviewResponse(
+                5,
+                reqBody.targetWord(),
+                reqBody.translatedWord(),
+                LanguageCode.FRENCH,
+                LanguageCode.ENGLISH,
+                reqBody.targetExample(),
+                reqBody.translatedExample(),
+                reqBody.partOfSpeech(),
+                reqBody.dynamicExamples(),
+                true,
+                123,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusMinutes(123),
+                null
+        );
+        given(mockedWordFlashcardService.createNewFlashcard(reqBody)).willReturn(response);
 
-        // when
-        mockMvc.perform(get("/add-card?deckid=" + testDeckId))
-
-                // then
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("deck", testDeck))
-                .andExpect(model().attribute("newFlashcard", instanceOf(CreateWordFlashcardRequest.class)))
-                .andExpect(view().name("add-card"));
-
-        then(mockedDeckService).should().getDeckById(testDeckId);
-    }
-
-    @WithMockUser(username = "username")
-    @Test
-    void getAddCardToDeckPage_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when + then
-        mockMvc.perform(get("/add-card?deckid=" + testDeckId))
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithAnonymousUser
-    @Test
-    void getAddCardToDeckPage_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when + then
-        mockMvc.perform(get("/create-card?deckid=" + testDeckId))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @WithMockUser(username = "username")
-    @Test
-    void createNewFlashcard_ShouldCreateNewFlashcardAndRedirectToAddCardPage() throws Exception {
-        // given
-        long testDeckId = 94L;
-        CreateWordFlashcardRequest testDto = new CreateWordFlashcardRequest();
-        testDto.setFront("front1");
-        testDto.setBack("back1");
-        testDto.setPartOfSpeech(PartOfSpeech.NOUN);
-        testDto.setDynamicExamples(false);
-
-        // when
-        mockMvc.perform(post("/add-card?deckid=" + testDeckId)
+        // when, then
+        MvcResult mvcResult = mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(reqBody))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                        .flashAttr("newFlashcard", testDto))
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
 
-                // then
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/add-card?deckid=" + testDeckId));
-
-        then(mockedWordFlashcardService).should().createNewFlashcard(testDto);
+        // then
+        then(mockedWordFlashcardService).should(times(1)).createNewFlashcard(reqBody);
+        WordFlashcardOverviewResponse resBody = json.readValue(mvcResult.getResponse().getContentAsString(), WordFlashcardOverviewResponse.class);
+        assertEquals(response, resBody);
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void createNewFlashcard_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = -1L;
-        CreateWordFlashcardRequest testDto = new CreateWordFlashcardRequest();
-        testDto.setFront("front1");
-        testDto.setBack("back1");
-        testDto.setPartOfSpeech(PartOfSpeech.NOUN);
-        testDto.setDynamicExamples(false);
-
-        // when
-        mockMvc.perform(post("/add-card?deckid=" + testDeckId)
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @MethodSource("invalidCreateWordFlashcardRequests")
+    void createFlashcard_ShouldReturnBadRequestStatusCode_WhenRequestBodyInvalid(CreateWordFlashcardRequest reqBody) throws Exception {
+        // when, then
+        mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(reqBody))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                        .flashAttr("newFlashcard", testDto))
-                // then
+                )
                 .andExpect(status().isBadRequest());
+
+        // then
+        then(mockedWordFlashcardService).shouldHaveNoInteractions();
     }
 
     @WithAnonymousUser
     @Test
     void createNewFlashcard_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
         // given
-        long testDeckId = 94L;
-        CreateWordFlashcardRequest testDto = new CreateWordFlashcardRequest();
-        testDto.setFront("front1");
-        testDto.setBack("back1");
-        testDto.setPartOfSpeech(PartOfSpeech.NOUN);
-        testDto.setDynamicExamples(false);
+        CreateWordFlashcardRequest validReqBody = new CreateWordFlashcardRequest(
+                "translation",
+                "target",
+                PartOfSpeech.NOUN,
+                true,
+                "This is a translated example.",
+                "This is an example sentence.",
+                23L
+        );
 
-        // when
-        mockMvc.perform(post("/add-card?deckid=" + testDeckId)
+        // when, then
+        mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(validReqBody))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                        .flashAttr("newFlashcard", testDto))
-                // then
+                )
                 .andExpect(status().isUnauthorized());
+
+        // then
+        then(mockedWordFlashcardService).shouldHaveNoInteractions();
     }
 
+    static Stream<CreateWordFlashcardRequest> validCreateWordFlashcardRequests() {
+        long deckId = 94L;
+        CreateWordFlashcardRequest body1 = new CreateWordFlashcardRequest(
+                "translation",
+                "target",
+                PartOfSpeech.NOUN,
+                true,
+                "This is a translated example.",
+                "This is an example sentence.",
+                deckId
+        );
+        CreateWordFlashcardRequest body2 = new CreateWordFlashcardRequest(
+                "translation",
+                "target",
+                null,
+                true,
+                "This is a translated example.",
+                "This is an example sentence.",
+                deckId
+        );
+        return Stream.of(body1, body2);
+    }
+
+    static Stream<CreateWordFlashcardRequest> invalidCreateWordFlashcardRequests() {
+        return Stream.of(
+                new CreateWordFlashcardRequest(
+                        "translationtranslationtranslationtranslationtranslationtranslationtranslationtran",
+                        "target",
+                        PartOfSpeech.NOUN,
+                        true,
+                        "This is a translated example.",
+                        "This is an example sentence.",
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "targettargettargettargettargettargettargettargettargettargettargettargettargettar",
+                        null,
+                        true,
+                        "This is a translated example.",
+                        "This is an example sentence.",
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "target",
+                        null,
+                        true,
+                        "This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is aa.",
+                        "This is an example sentence.",
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "target",
+                        null,
+                        true,
+                        "This is a translated example.",
+                        "This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is aa.",
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "target",
+                        null,
+                        true,
+                        null,
+                        "This is an example sentence.",
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "target",
+                        null,
+                        true,
+                        "This is a translated example.",
+                        null,
+                        14L
+                ),
+                new CreateWordFlashcardRequest(
+                        "translation",
+                        "target",
+                        null,
+                        true,
+                        "This is a translated example.",
+                        "This is a translated example.",
+                        0L
+                )
+        );
+    }
 }

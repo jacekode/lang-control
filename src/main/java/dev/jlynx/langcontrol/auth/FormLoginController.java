@@ -1,6 +1,7 @@
 package dev.jlynx.langcontrol.auth;
 
 import dev.jlynx.langcontrol.account.AccountService;
+import dev.jlynx.langcontrol.account.dto.AccountOverviewResponse;
 import dev.jlynx.langcontrol.auth.dto.RegisterRequestBody;
 import dev.jlynx.langcontrol.jwtauth.dto.TokenResponseBody;
 import jakarta.validation.Valid;
@@ -38,7 +39,7 @@ public class FormLoginController {
      * @param body a DTO object which maps to the registration request's body
      */
     @PostMapping("/register")
-    public ResponseEntity<Object> register(@Valid @RequestBody RegisterRequestBody body) {
+    public ResponseEntity<AccountOverviewResponse> register(@Valid @RequestBody RegisterRequestBody body) {
         LOG.debug("register() method reached. body={}", body);
         var accountOverview = accountService.registerAccount(body);
         return new ResponseEntity<>(accountOverview, HttpStatus.CREATED);

@@ -26,7 +26,7 @@ public interface WordFlashcardService {
 
     List<WordFlashcardView> fetchAllReadyForViewCardsByDeck(long deckId);
 
-    List<WordFlashcardView> fetchAllReadyForViewByDeck(long deckId, int limit, SpacedRepetitionSortBy sortBy, SortOrder order);
+    List<WordFlashcardView> fetchReadyForView(long deckId, int limit, SpacedRepetitionSortBy sortBy, SortOrder order);
     
     IntervalForecastResponse getIntervalForecasts(long cardId);
 }

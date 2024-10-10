@@ -37,8 +37,8 @@ public class SpacedRepetitionController {
             @Min(3) @RequestParam(value = "limit", required = false, defaultValue = "10") int limit,
             @RequestParam(value = "sort", required = false, defaultValue = "view") SpacedRepetitionSortBy sortBy,
             @RequestParam(value = "order", required = false, defaultValue = "asc") SortOrder order
-            ) {
-        List<WordFlashcardView> readyCards = wordFlashcardService.fetchAllReadyForViewByDeck(deckId, limit, sortBy, order);
+    ) {
+        List<WordFlashcardView> readyCards = wordFlashcardService.fetchReadyForView(deckId, limit, sortBy, order);
         return ResponseEntity.ok(readyCards);
     }
 

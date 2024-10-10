@@ -1,56 +1,45 @@
 package dev.jlynx.langcontrol.spacedrepetition;
 
-import dev.jlynx.langcontrol.account.Account;
-import dev.jlynx.langcontrol.deck.Deck;
-import dev.jlynx.langcontrol.lang.LanguageCode;
 import dev.jlynx.langcontrol.flashcard.WordFlashcard;
 import dev.jlynx.langcontrol.flashcard.WordFlashcardService;
-import dev.jlynx.langcontrol.role.DefinedRoleValue;
-import dev.jlynx.langcontrol.role.Role;
-import dev.jlynx.langcontrol.userprofile.UserProfile;
-import dev.jlynx.langcontrol.util.AuthRetriever;
+import dev.jlynx.langcontrol.spacedrepetition.dto.FlashcardRatingResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+@ExtendWith(MockitoExtension.class)
 class SpacedRepetitionServiceImplTest {
 
-    private final SpacedRepetitionServiceImpl underTest;
-    private final WordFlashcardService mockedWordFlashcardService;
-    private final SpacedRepetitionAlgorithm mockedSpacedRepetitionAlgorithm;
+    @InjectMocks
+    private SpacedRepetitionServiceImpl underTest;
 
-    public SpacedRepetitionServiceImplTest() {
-        this.mockedSpacedRepetitionAlgorithm = Mockito.mock(SpacedRepetitionAlgorithm.class);
-        this.mockedWordFlashcardService = Mockito.mock(WordFlashcardService.class);
-        this.underTest = new SpacedRepetitionServiceImpl(mockedWordFlashcardService, mockedSpacedRepetitionAlgorithm);
-    }
+    @Mock
+    private WordFlashcardService mockedWordFlashcardService;
+    @Mock
+    private SpacedRepetitionAlgorithm mockedSpacedRepetitionAlgorithm;
 
-    public static Stream<Arguments> parametersWithNullValues() {
-        return Stream.of(
-                Arguments.arguments(null, RatingType.LEARN_NEXT),
-                Arguments.arguments(1L, null),
-                Arguments.arguments(null, null)
-        );
-    }
+    @Captor
+    ArgumentCaptor<Long> longCaptor;
+    @Captor
+    ArgumentCaptor<WordFlashcard> wordFlashcardCaptor;
+    @Captor
+    ArgumentCaptor<RatingType> ratingTypeCaptor;
 
     @ParameterizedTest
-    @MethodSource("parametersWithNullValues")
-    void applyRating_ShouldThrowException_WhenParametersAreNull(Long flashcardId, RatingType ratingType) {
-        // when
+    @MethodSource("invalidArguments")
+    void applyRating_ShouldThrow_WhenArgumentsAreNull(Long flashcardId, RatingType ratingType) {
+        // given
         Exception thrown = null;
+
+        // when
         try {
             underTest.applyRating(flashcardId, ratingType);
         } catch (Exception e) {
@@ -58,53 +47,86 @@ class SpacedRepetitionServiceImplTest {
         }
 
         // then
-        assertNotNull(thrown);
-        assertTrue(thrown instanceof IllegalArgumentException);
+        assertInstanceOf(IllegalArgumentException.class, thrown);
     }
 
     @Test
-    void applyRating_ShouldInvokeApplyMethodOfAlgorithmClassWithCorrectParameters_WhenParametersAreNotNull() {
+    void applyRating_ShouldSwitchToReviewMode() {
         // given
-        RatingType ratingTypeParam = RatingType.REVIEW_NORMAL;
-        Long testCardId = 2L;
-        WordFlashcard testCard = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("test front")
-                .withTargetWord("test back")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .build();
-        testCard.setId(testCardId);
+        RatingType rating = RatingType.REVIEW_PARTIALLY;
+        Long cardId = 2L;
+//        WordFlashcard card = WordFlashcard.inInitialLearnMode()
+//                .withTranslatedWord("translation")
+//                .withTargetWord("target")
+//                .withSourceLang(LanguageCode.ENGLISH)
+//                .withTargetLang(LanguageCode.SPANISH)
+//                .build();
+//        card.setId(cardId);
+//        Deck deck = new Deck(76L, "test deck", null,
+//                LanguageCode.ENGLISH, LanguageCode.DANISH, new ArrayList<>());
+//        deck.getFlashcards().add(card);
 
-        Account testAccount = new Account(15L, "username", "testPassword",
-                List.of(new Role(1L, DefinedRoleValue.USER)));
-        UserProfile testUserProfile = new UserProfile(45L, "name");
-        testUserProfile.setAccount(testAccount);
-        testAccount.setUserProfile(testUserProfile);
-        testUserProfile.setDecks(new ArrayList<>());
-        Deck testDeck = new Deck(76L, "test deck", testUserProfile,
-                LanguageCode.ENGLISH, LanguageCode.DANISH, new ArrayList<>());
-        testUserProfile.getDecks().add(testDeck);
-        testDeck.getFlashcards().add(testCard);
-
-        given(mockedWordFlashcardService.getCardById(testCardId)).willReturn(testCard);
-        try (MockedStatic<AuthRetriever> mockedStaticPR = Mockito.mockStatic(AuthRetriever.class)) {
-            mockedStaticPR.when(AuthRetriever::retrieveCurrentAccount).thenReturn(testAccount);
+        WordFlashcard mockedCard = Mockito.mock(WordFlashcard.class);
+        given(mockedWordFlashcardService.getCardById(cardId)).willReturn(mockedCard);
+        given(mockedCard.getId()).willReturn(cardId);
+        given(mockedCard.isInLearnMode()).willReturn(true, false);
 
         // when
-            underTest.applyRating(testCardId, ratingTypeParam);
-        }
+        FlashcardRatingResponse returned = underTest.applyRating(cardId, rating);
 
         // then
-        ArgumentCaptor<Long> argCaptorForLong = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<WordFlashcard> argCaptorForFlashcard = ArgumentCaptor.forClass(WordFlashcard.class);
-        ArgumentCaptor<RatingType> argCaptorForRatingType = ArgumentCaptor.forClass(RatingType.class);
-        InOrder inOrder = Mockito.inOrder(mockedWordFlashcardService, mockedSpacedRepetitionAlgorithm);
+        InOrder inOrder = Mockito.inOrder(mockedSpacedRepetitionAlgorithm, mockedCard, mockedWordFlashcardService);
 
-        then(mockedWordFlashcardService).should(inOrder).getCardById(argCaptorForLong.capture());
-        then(mockedSpacedRepetitionAlgorithm).should(inOrder).apply(argCaptorForFlashcard.capture(),
-                argCaptorForRatingType.capture());
-        assertEquals(testCardId, argCaptorForLong.getValue());
-        assertEquals(testCardId, argCaptorForFlashcard.getValue().getId());
-        assertEquals(ratingTypeParam, argCaptorForRatingType.getValue());
+        then(mockedWordFlashcardService).should(inOrder).getCardById(longCaptor.capture());
+        then(mockedCard).should(inOrder).isInLearnMode();
+        then(mockedSpacedRepetitionAlgorithm).should(inOrder).apply(wordFlashcardCaptor.capture(), ratingTypeCaptor.capture());
+        then(mockedCard).should(inOrder).isInLearnMode();
+
+        assertEquals(cardId, longCaptor.getValue());
+        assertEquals(cardId, wordFlashcardCaptor.getValue().getId());
+        assertEquals(rating, ratingTypeCaptor.getValue());
+
+        assertEquals(cardId, returned.id());
+        assertTrue(returned.switchedToReviewMode());
+        assertFalse(returned.switchedToLearnMode());
+    }
+
+    @Test
+    void applyRating_ShouldSwitchToLearnMode() {
+        // given
+        RatingType rating = RatingType.REVIEW_PARTIALLY;
+        Long cardId = 2L;
+        WordFlashcard mockedCard = Mockito.mock(WordFlashcard.class);
+        given(mockedWordFlashcardService.getCardById(cardId)).willReturn(mockedCard);
+        given(mockedCard.getId()).willReturn(cardId);
+        given(mockedCard.isInLearnMode()).willReturn(false, true);
+
+        // when
+        FlashcardRatingResponse returned = underTest.applyRating(cardId, rating);
+
+        // then
+        InOrder inOrder = Mockito.inOrder(mockedSpacedRepetitionAlgorithm, mockedCard, mockedWordFlashcardService);
+
+        then(mockedWordFlashcardService).should(inOrder).getCardById(longCaptor.capture());
+        then(mockedCard).should(inOrder).isInLearnMode();
+        then(mockedSpacedRepetitionAlgorithm).should(inOrder).apply(wordFlashcardCaptor.capture(), ratingTypeCaptor.capture());
+        then(mockedCard).should(inOrder).isInLearnMode();
+
+        assertEquals(cardId, longCaptor.getValue());
+        assertEquals(cardId, wordFlashcardCaptor.getValue().getId());
+        assertEquals(rating, ratingTypeCaptor.getValue());
+
+        assertEquals(cardId, returned.id());
+        assertFalse(returned.switchedToReviewMode());
+        assertTrue(returned.switchedToLearnMode());
+    }
+
+
+    static Stream<Arguments> invalidArguments() {
+        return Stream.of(
+                Arguments.of(null, RatingType.LEARN_DONT_KNOW),
+                Arguments.of(5L, null),
+                Arguments.of(null, null)
+        );
     }
 }

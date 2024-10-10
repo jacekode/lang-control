@@ -96,7 +96,6 @@ public class DeckServiceImpl implements DeckService {
         if (!Objects.equals(foundDeck.getUserProfile().getId(), profile.getId())) {
             throw new AccessForbiddenException("You don't have permission to access deck of id=" + deckId);
         }
-
         deckRepository.delete(foundDeck);
     }
 

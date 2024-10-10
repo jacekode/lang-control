@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @Validated
@@ -22,12 +21,10 @@ import java.util.List;
 public class DeckController {
 
     private final DeckService deckService;
-    private final WordFlashcardService wordFlashcardService;
 
     @Autowired
-    public DeckController(DeckService deckService, WordFlashcardService wordFlashcardService) {
+    public DeckController(DeckService deckService) {
         this.deckService = deckService;
-        this.wordFlashcardService = wordFlashcardService;
     }
 
     @PostMapping

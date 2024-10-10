@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class SpacedRepetitionServiceImpl implements SpacedRepetitionService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SpacedRepetitionServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SpacedRepetitionServiceImpl.class);
 
     private final WordFlashcardService wordFlashcardService;
     private final SpacedRepetitionAlgorithm spacedRepetitionAlgorithm;
@@ -34,7 +34,7 @@ public class SpacedRepetitionServiceImpl implements SpacedRepetitionService {
         boolean inLearnModeBefore = flashcard.isInLearnMode();
 
         spacedRepetitionAlgorithm.apply(flashcard, ratingType);
-        LOGGER.info("Rating applied. Next view datetime in UTC is: {}", flashcard.getNextView());
+        LOG.debug("Rating applied. Next view datetime in UTC is: {}", flashcard.getNextView());
 
         boolean inLearnModeAfter = flashcard.isInLearnMode();
         boolean switchedToReviewMode = inLearnModeBefore && !inLearnModeAfter;

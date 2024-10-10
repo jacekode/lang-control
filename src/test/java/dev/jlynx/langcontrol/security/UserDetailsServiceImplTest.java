@@ -19,55 +19,57 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
-@ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
+
+    private static final String validUsername = "username";
 
     private UserDetailsServiceImpl underTest;
 
-    @Mock
     private AccountRepository mockedAccountRepository;
 
     @BeforeEach
     void setUp() {
+        mockedAccountRepository = Mockito.mock(AccountRepository.class);
         this.underTest = new UserDetailsServiceImpl(mockedAccountRepository);
     }
 
     @Test
     void loadUserByUsername_ShouldThrowException_WhenUserIsNotFound() {
         // given
-        String validEmail = "valid@example.com";
         RuntimeException expectedException = null;
         given(mockedAccountRepository.findByUsername(Mockito.anyString())).willReturn(Optional.empty());
 
         // when
         try {
-            underTest.loadUserByUsername(validEmail);
+            underTest.loadUserByUsername(validUsername);
         } catch (RuntimeException e) {
             expectedException = e;
         }
 
         // then
-        assertTrue(expectedException instanceof UsernameNotFoundException);
+        assertInstanceOf(UsernameNotFoundException.class, expectedException);
     }
 
     @Test
     void loadUserByUsername_ShouldReturnUser_WhenFound() {
         // given
-        String validEmail = "valid@example.com";
         Account testAccount = new Account(
-                7L, "valid@example.com",
+                7L,
+                validUsername,
                 "aBt3%4gh45srSuiae5h%EA5h",
                 List.of(new Role(1L, DefinedRoleValue.USER)),
                 true, true,
-                true, true);
-        given(mockedAccountRepository.findByUsername(validEmail)).willReturn(Optional.of(testAccount));
+                true, true
+        );
+        given(mockedAccountRepository.findByUsername(validUsername)).willReturn(Optional.of(testAccount));
 
         // when
-        UserDetails result = underTest.loadUserByUsername(validEmail);
+        UserDetails returned = underTest.loadUserByUsername(validUsername);
 
         // then
-        then(mockedAccountRepository).should().findByUsername(validEmail);
-        assertEquals(testAccount, result);
+        then(mockedAccountRepository).should(times(1)).findByUsername(validUsername);
+        assertEquals(testAccount, returned);
     }
 }

@@ -187,7 +187,7 @@ public class WordFlashcardServiceImpl implements WordFlashcardService {
     }
 
     @Override
-    public List<WordFlashcardView> fetchAllReadyForViewByDeck(long deckId, int limit, SpacedRepetitionSortBy sortBy, SortOrder order) {
+    public List<WordFlashcardView> fetchReadyForView(long deckId, int limit, SpacedRepetitionSortBy sortBy, SortOrder order) {
         if (limit < 1) {
             throw new IllegalArgumentException("Result set limit cannot be less than one.");
         }

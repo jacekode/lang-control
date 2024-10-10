@@ -1,221 +1,211 @@
 package dev.jlynx.langcontrol.deck;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.jlynx.langcontrol.deck.dto.CreateDeckRequest;
+import dev.jlynx.langcontrol.deck.dto.DeckOverview;
 import dev.jlynx.langcontrol.deck.view.DeckView;
-import dev.jlynx.langcontrol.flashcard.WordFlashcard;
-import dev.jlynx.langcontrol.flashcard.WordFlashcardService;
 import dev.jlynx.langcontrol.lang.LanguageCode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.web.context.WebApplicationContext;
 import java.util.List;
-
+import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(DeckController.class)
+//@AutoConfigureMockMvc
 class DeckControllerTest {
+
+    private static final String baseUrl = "/api/decks";
+    private static final String username = "username";
+    private static final String deckName = "Test deck";
+    private static final CreateDeckRequest validReqBody = new CreateDeckRequest(deckName, LanguageCode.SPANISH, LanguageCode.ENGLISH);
+    private static final DeckOverview deckOverview = new DeckOverview(7L, deckName, LanguageCode.CZECH, LanguageCode.DUTCH);
 
     @Autowired
     private MockMvc mockMvc;
 
+//    @Autowired
+//    private WebApplicationContext wac;
+
+    @Autowired
+    private ObjectMapper json;
+
     @MockBean
     private DeckService mockedDeckService;
 
-    @MockBean
-    private WordFlashcardService mockedWordFlashcardService;
-
     @Captor
-    private ArgumentCaptor<Deck> deckArgCaptor;
+    private ArgumentCaptor<CreateDeckRequest> createDeckRequestCaptor;
 
 
-//    @WithMockUser(username = "username")
-//    @Test
-//    void getCreateDeckPage_ShouldReturnAddDeckPage() throws Exception {
-//        mockMvc.perform(get("/add-deck"))
-//                .andExpect(status().isOk())
-//                .andExpect(view().name("add-deck"))
-//                .andExpect(model().attribute("deckToCreate", instanceOf(Deck.class)))
-//                .andExpect(model().attribute("languageCodes", LanguageCode.values()));
-//    }
-//
-//    @WithAnonymousUser
-//    @Test
-//    void getCreateDeckPage_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-//        mockMvc.perform(get("/create-deck"))
-//                .andExpect(status().isUnauthorized());
+//    @BeforeEach
+//    void setUp() {
+//        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
 //    }
 
-    @WithMockUser(username = "username")
+
+    @WithMockUser(username = username)
     @Test
-    void createDeck_ShouldCreateNewDeckAndRedirectToDeckCreationPage() throws Exception {
+    void createDeck_ShouldCreateAndReturnOverview() throws Exception {
         // given
-        CreateDeckDTO deckDto = new CreateDeckDTO("Test Deck",
-                LanguageCode.SPANISH, LanguageCode.ENGLISH);
-        Mockito.doNothing().when(mockedDeckService).createNewDeck(Mockito.any(Deck.class));
+        given(mockedDeckService.createNewDeck(Mockito.any(CreateDeckRequest.class))).willReturn(deckOverview);
 
         // when
-        mockMvc.perform(post("/add-deck")
+        MvcResult mvcResult = mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(validReqBody))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                .flashAttr("deckToCreate", deckDto))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/add-deck"));
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
 
         // then
-        then(mockedDeckService).should(times(1)).createNewDeck(deckArgCaptor.capture());
-        Deck argument = deckArgCaptor.getValue();
-        assertEquals(deckDto.getName(), argument.getName());
-        assertEquals(deckDto.getSourceLanguage(), argument.getSourceLang());
-        assertEquals(deckDto.getTargetLanguage(), argument.getTargetLang());
+        then(mockedDeckService).should(times(1)).createNewDeck(createDeckRequestCaptor.capture());
+        CreateDeckRequest arg = createDeckRequestCaptor.getValue();
+        assertEquals(validReqBody.name(), arg.name());
+        assertEquals(validReqBody.sourceLang(), arg.sourceLang());
+        assertEquals(validReqBody.targetLang(), arg.targetLang());
+        DeckOverview responseBody = json.readValue(mvcResult.getResponse().getContentAsString(), DeckOverview.class);
+        assertEquals(deckOverview, responseBody);
     }
 
     @WithAnonymousUser
     @Test
-    void createDeck_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        // given
-        CreateDeckDTO deckDto = new CreateDeckDTO("Test Deck",
-                LanguageCode.SPANISH, LanguageCode.ENGLISH);
-        Mockito.doNothing().when(mockedDeckService).createNewDeck(Mockito.any(Deck.class));
-
-        // when + then
-        mockMvc.perform(post("/create-deck")
+    void createDeck_ShouldReturnUnauthorizedStatusCode_WhenUserNotAuthenticated() throws Exception {
+        // when, then
+        mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(validReqBody))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .with(csrf())
-                        .flashAttr("deckToCreate", deckDto))
+                )
                 .andExpect(status().isUnauthorized());
+
+        // then
+        then(mockedDeckService).shouldHaveNoInteractions();
     }
 
-    @WithMockUser(username = "username")
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @MethodSource("invalidCreateDeckRequests")
+    void createDeck_ShouldReturnBadRequest_WhenRequestBodyInvalid(CreateDeckRequest invalid) throws Exception {
+        // given
+
+        // when, then
+        mockMvc.perform(post(baseUrl)
+                        .content(json.writeValueAsString(invalid))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
+
+        // then
+        then(mockedDeckService).shouldHaveNoInteractions();
+    }
+
+    @WithMockUser(username = username)
     @Test
-    void getShowDecksPage_ShouldReturnPageWithAllDecks() throws Exception {
+    void getAllUserDecks_ShouldReturnAllDecksOfCurrentUser() throws Exception {
         // given
         DeckView deckView1 = new DeckView(67L, "Deck One", LanguageCode.SPANISH, LanguageCode.ENGLISH);
-        DeckView deckView2 = new DeckView(72L, "Deck Two", LanguageCode.SPANISH, LanguageCode.GERMAN);
+        DeckView deckView2 = new DeckView(72L, "Deck Two", LanguageCode.FRENCH, LanguageCode.GERMAN);
         List<DeckView> deckViewList = List.of(deckView1, deckView2);
         given(mockedDeckService.getAllCurrentUserProfileDecks()).willReturn(deckViewList);
 
         // when + then
-        mockMvc.perform(get("/decks"))
+        MvcResult mvcResult = mockMvc.perform(get(baseUrl))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("decks", deckViewList))
-                .andExpect(view().name("all-decks"));
+                .andReturn();
 
-        then(mockedDeckService).should().getAllCurrentUserProfileDecks();
+        // then
+        then(mockedDeckService).should(times(1)).getAllCurrentUserProfileDecks();
+        List<DeckView> response = json.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<List<DeckView>>() {});
+        assertEquals(deckViewList, response);
     }
 
     @WithAnonymousUser
     @Test
-    void getShowDecksPage_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/decks"))
+    void getAllUserDecks_ShouldReturnUnauthorizedStatusCode_WhenUserNotAuthenticated() throws Exception {
+        // when, then
+        mockMvc.perform(get(baseUrl))
                 .andExpect(status().isUnauthorized());
+
+        // then
+        then(mockedDeckService).shouldHaveNoInteractions();
     }
 
-    @WithMockUser(username = "username")
+    @WithMockUser(username = username)
     @Test
-    void deleteDeck_ShouldDeleteDeckAndRedirectToAllDecksPage() throws Exception {
+    void deleteDeck_ShouldDeleteDeck() throws Exception {
         // given
-        long testDeckId = 145L;
+        long deckId = 145L;
 
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/delete", testDeckId))
-                        .with(csrf()))
+        // when, then
+        mockMvc.perform(delete(String.format("%s/%d", baseUrl, deckId))
+                        .with(csrf())
+                )
+                .andExpect(status().isNoContent());
 
-                // then
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("/decks"));
-        then(mockedDeckService).should(times(1)).deleteDeck(testDeckId);
+        // then
+        then(mockedDeckService).should(times(1)).deleteDeck(deckId);
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void deleteDeck_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/delete", testDeckId))
-                        .with(csrf()))
-                // then
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @ValueSource(longs = { 0L, -1L})
+    void deleteDeck_ShouldReturnBadRequestStatusCode_WhenDeckIdLessThanOne(long invalidId) throws Exception {
+        // when, then
+        mockMvc.perform(delete(String.format("%s/%d", baseUrl, invalidId))
+                        .with(csrf())
+                )
                 .andExpect(status().isBadRequest());
+
+        // then
+        then(mockedDeckService).shouldHaveNoInteractions();
     }
 
     @WithAnonymousUser
     @Test
-    void deleteDeck_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
+    void deleteDeck_ShouldReturnUnauthorizedStatusCode_WhenUserNotAuthenticated() throws Exception {
         // given
-        long testDeckId = 145L;
+        long deckId = 145L;
 
-        // when
-        mockMvc.perform(post(String.format("/deck/%d/delete", testDeckId))
-                        .with(csrf()))
-                // then
+        // when, then
+        mockMvc.perform(delete(String.format("%s/%d", baseUrl, deckId))
+                        .with(csrf())
+                )
                 .andExpect(status().isUnauthorized());
+
+        // then
+        then(mockedDeckService).shouldHaveNoInteractions();
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void showAllDecksFlashcards_ShouldReturnAllDeckCardsPage() throws Exception {
-        // given
-        long testDeckId = 287L;
-        WordFlashcard card1 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front1").withTargetWord("back1")
-                .withTargetLang(LanguageCode.GERMAN)
-                .withSourceLang(LanguageCode.ENGLISH)
-                .build();
-        WordFlashcard card2 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front2").withTargetWord("back2")
-                .withTargetLang(LanguageCode.GERMAN)
-                .withSourceLang(LanguageCode.SPANISH)
-                .build();
-        List<WordFlashcard> testCardList = List.of(card1, card2);
-        Deck testDeck = new Deck(testDeckId, "Test Deck", null,
-                LanguageCode.GERMAN, LanguageCode.ENGLISH, testCardList);
-        given(mockedDeckService.getDeckById(testDeckId)).willReturn(testDeck);
-        given(mockedWordFlashcardService.getFlashcards(testDeck, , , , )).willReturn(testCardList);
-
-        // when
-        mockMvc.perform(get(String.format("/deck/%s/cards", testDeckId)))
-
-                // then
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("deck", testDeck))
-                .andExpect(model().attribute("deckFlashcards", testCardList));
-        then(mockedWordFlashcardService).should().getFlashcards(testDeck, , , , );
-    }
-
-    @WithMockUser(username = "username")
-    @Test
-    void getDeckFlashcards_ShouldReturnBadRequestStatusCode_WhenDeckIdIsLessThanOne() throws Exception {
-        // given
-        long testDeckId = 0L;
-
-        // when
-        mockMvc.perform(get(String.format("/deck/%s/cards", testDeckId)))
-                // then
-                .andExpect(status().isBadRequest());
-    }
-
-    @WithAnonymousUser
-    @Test
-    void getDeckFlashcards_ShouldReturnUnauthorizedStatusCode_WhenUserIsNotAuthenticated() throws Exception {
-        // given
-        long testDeckId = 287L;
-
-        // when
-        mockMvc.perform(get(String.format("/deck/%s/cards", testDeckId)))
-                // then
-                .andExpect(status().isUnauthorized());
+    static Stream<CreateDeckRequest> invalidCreateDeckRequests() {
+        return Stream.of(
+                new CreateDeckRequest("longname longname longname longname", LanguageCode.CZECH, LanguageCode.DANISH),
+                new CreateDeckRequest("   ", LanguageCode.CZECH, LanguageCode.DANISH),
+                new CreateDeckRequest(null, LanguageCode.CZECH, LanguageCode.DANISH),
+                new CreateDeckRequest("Test deck", null, LanguageCode.DANISH),
+                new CreateDeckRequest("Test deck", LanguageCode.DANISH, null)
+        );
     }
 }

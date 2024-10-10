@@ -1,9 +1,11 @@
 package dev.jlynx.langcontrol.util;
 
+import dev.jlynx.langcontrol.account.AccountRepository;
 import dev.jlynx.langcontrol.exception.AuthenticationNotFoundException;
 import dev.jlynx.langcontrol.account.Account;
 import dev.jlynx.langcontrol.role.DefinedRoleValue;
 import dev.jlynx.langcontrol.role.Role;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -11,18 +13,33 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 class AuthRetrieverTest {
 
+    private static final String username = "username";
+
+    private AuthRetriever underTest;
+    private AccountRepository mockedAccountRepository;
+    SecurityContext mockedSecurityContext;
+    Authentication mockedAuthentication;
+
+    @BeforeEach
+    void setUp() {
+        mockedAccountRepository = Mockito.mock(AccountRepository.class);
+        underTest = new AuthRetriever(mockedAccountRepository);
+        mockedSecurityContext = Mockito.mock(SecurityContext.class);
+        mockedAuthentication = Mockito.mock(Authentication.class);
+    }
+
     @Test
-    void retrieveCurrentAccount_ShouldThrowException_WhenAuthenticationIsNull() {
+    void retrieveCurrentAccount_ShouldThrow_WhenAuthenticationIsNull() {
         // given
         RuntimeException expectedException = null;
-        SecurityContext mockedSecurityContext = Mockito.mock(SecurityContext.class);
         given(mockedSecurityContext.getAuthentication()).willReturn(null);
 
         try (MockedStatic<SecurityContextHolder> mockedStaticSCH = Mockito.mockStatic(SecurityContextHolder.class)) {
@@ -30,42 +47,42 @@ class AuthRetrieverTest {
 
         // when
             try {
-                AuthRetriever.retrieveCurrentAccount();
+                underTest.retrieveCurrentAccount();
             } catch (RuntimeException e) {
                 expectedException = e;
             }
         }
 
         // then
-        assertTrue(expectedException instanceof AuthenticationNotFoundException);
+        assertInstanceOf(AuthenticationNotFoundException.class, expectedException);
     }
 
     @Test
-    void retrieveAccount_ShouldReturnCurrentAccount_WhenAuthenticationIsNotNull() {
+    void retrieveAccount_ShouldReturnCurrentAccount_WhenAuthenticationIsPresent() {
         // given
-        Account retrievedAccount;
+        Account returned;
         Account testAccount = new Account(17L,
-                "test@example.com",
+                username,
                 "78oytAb$HEby7o",
-                List.of(new Role(1L, DefinedRoleValue.USER)));
-
-        SecurityContext mockedSecurityContext = Mockito.mock(SecurityContext.class);
-        Authentication mockedAuthentication = Mockito.mock(Authentication.class);
+                List.of(new Role(1L, DefinedRoleValue.USER))
+        );
         given(mockedSecurityContext.getAuthentication()).willReturn(mockedAuthentication);
-        given(mockedAuthentication.getPrincipal()).willReturn(testAccount);
+        given(mockedAuthentication.getName()).willReturn(username);
+        given(mockedAccountRepository.findByUsername(username)).willReturn(Optional.of(testAccount));
 
         try (MockedStatic<SecurityContextHolder> mockedStaticSCH = Mockito.mockStatic(SecurityContextHolder.class)) {
             mockedStaticSCH.when(SecurityContextHolder::getContext).thenReturn(mockedSecurityContext);
 
             // when
-            retrievedAccount = AuthRetriever.retrieveCurrentAccount();
+            returned = underTest.retrieveCurrentAccount();
         }
 
         // then
-        assertEquals(testAccount.getId(), retrievedAccount.getId());
-        assertEquals(testAccount.getUsername(), retrievedAccount.getUsername());
-        assertEquals(testAccount.getPassword(), retrievedAccount.getPassword());
-        assertEquals(testAccount.getAuthorities(), retrievedAccount.getAuthorities());
-        assertEquals(testAccount.getRoles(), retrievedAccount.getRoles());
+        then(mockedAccountRepository).should(times(1)).findByUsername(username);
+        assertEquals(testAccount.getId(), returned.getId());
+        assertEquals(testAccount.getUsername(), returned.getUsername());
+        assertEquals(testAccount.getPassword(), returned.getPassword());
+        assertEquals(testAccount.getAuthorities(), returned.getAuthorities());
+        assertEquals(testAccount.getRoles(), returned.getRoles());
     }
 }

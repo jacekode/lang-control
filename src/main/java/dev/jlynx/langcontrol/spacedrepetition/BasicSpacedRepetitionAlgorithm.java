@@ -1,6 +1,8 @@
 package dev.jlynx.langcontrol.spacedrepetition;
 
 import dev.jlynx.langcontrol.flashcard.Flashcard;
+import dev.jlynx.langcontrol.util.DateTimeTools;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -13,9 +15,20 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
     protected static final float FACTOR_UPDATE_UNIT = 0.04F;
     protected static final float I_FACTOR_UPPER_LIMIT = 1.4F;
     protected static final float I_FACTOR_BOTTOM_LIMIT = 1.1F;
-    protected static final float R_FACTOR_UPPER_LIMIT = 0.5F;
-    protected static final float R_FACTOR_BOTTOM_LIMIT = 0.2F;
-    public static final long INITIAL_REVIEW_INTERVAL = Flashcard.INITIAL_REVIEW_INTERVAL;
+    protected static final float R_FACTOR_UPPER_LIMIT = 0.1F;
+    protected static final float R_FACTOR_BOTTOM_LIMIT = 0.01F;
+
+    public static final float INITIAL_IFACTOR = 1.3f;
+    public static final float INITIAL_RFACTOR = 0.05f;
+    public static final LearnModeStep INIT_LMS = LearnModeStep.TWO;
+    public static final long INITIAL_REVIEW_INTERVAL = Duration.ofHours(24).toMinutes();
+
+    private final DateTimeTools dtt;
+
+    @Autowired
+    public BasicSpacedRepetitionAlgorithm(DateTimeTools dtt) {
+        this.dtt = dtt;
+    }
 
     @Override
     public void apply(Flashcard card, RatingType rating) {
@@ -91,14 +104,19 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
             throw new IllegalArgumentException("Learn rating couldn't be applied to a flashcard in review mode.");
         }
         switch (rating) {
-            case REVIEW_FORGOT -> card.updateNextView(INITIAL_REVIEW_INTERVAL);
-            case REVIEW_PARTIALLY -> {
-                card.updateNextView((long) (card.getCurrentInterval() * card.getRFactor()));
+            case REVIEW_FORGOT -> {
+                card.setCurrentInterval((long) (card.getCurrentInterval() * card.getRFactor()));
+                card.setNextView(dtt.getNowUtc().plusMinutes(card.getCurrentInterval()));
                 decreaseIFactorByOneUnit(card);
                 decreaseRFactorByOneUnit(card);
             }
+            case REVIEW_PARTIALLY -> {
+                card.setCurrentInterval((long) (card.getCurrentInterval() * 0.5));
+                card.setNextView(dtt.getNowUtc().plusMinutes(card.getCurrentInterval()));
+            }
             case REVIEW_REMEMBER -> {
-                card.updateNextView((long) (card.getCurrentInterval() * card.getIFactor()));
+                card.setCurrentInterval((long) (card.getCurrentInterval() * card.getIFactor()));
+                card.setNextView(dtt.getNowUtc().plusMinutes(card.getCurrentInterval()));
                 increaseIFactorByOneUnit(card);
                 increaseRFactorByOneUnit(card);
             }
@@ -110,22 +128,25 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
             switchToReviewMode(item);
         } else {
             item.setLearnModeStep(LearnModeStep.fromNumeral(item.getLearnModeStep().getNumeral() + 1));
-            LocalDateTime nextViewUTC = LocalDateTime.now(Clock.systemUTC())
-                    .plus(item.getLearnModeStep().getAmountToAdd(),
-                            item.getLearnModeStep().getTemporalUnit());
-            item.setNextView(nextViewUTC);
+            long interval = Duration
+                    .of(item.getLearnModeStep().getAmountToAdd(), item.getLearnModeStep().getTemporalUnit())
+                    .toMinutes();
+            LocalDateTime nextView = dtt.getNowUtc().plusMinutes(interval);
+            item.setNextView(nextView);
+            item.setCurrentInterval(interval);
         }
     }
 
     private void stepDownInLearnMode(Flashcard item) {
         if (item.getLearnModeStep() != LearnModeStep.ONE) {
             item.setLearnModeStep(LearnModeStep.fromNumeral(item.getLearnModeStep().getNumeral() - 1));
-        } else {
-            LocalDateTime nextViewUTC = LocalDateTime.now(Clock.systemUTC())
-                    .plus(item.getLearnModeStep().getAmountToAdd(),
-                            item.getLearnModeStep().getTemporalUnit());
-            item.setNextView(nextViewUTC);
         }
+        long interval = Duration
+                .of(item.getLearnModeStep().getAmountToAdd(), item.getLearnModeStep().getTemporalUnit())
+                .toMinutes();
+        LocalDateTime nextView = dtt.getNowUtc().plusMinutes(interval);
+        item.setNextView(nextView);
+        item.setCurrentInterval(interval);
     }
 
     private boolean switchToReviewMode(Flashcard item) {
@@ -134,7 +155,8 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
         }
         item.setInLearnMode(false);
         item.setLearnModeStep(null);
-        item.updateNextView(INITIAL_REVIEW_INTERVAL);
+        item.setCurrentInterval(INITIAL_REVIEW_INTERVAL);
+        item.setNextView(dtt.getNowUtc().plusMinutes(item.getCurrentInterval()));
         return true;
     }
 

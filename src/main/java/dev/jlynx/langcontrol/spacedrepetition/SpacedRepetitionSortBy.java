@@ -21,4 +21,13 @@ public enum SpacedRepetitionSortBy {
     public String getFieldName() {
         return fieldName;
     }
+
+    public static SpacedRepetitionSortBy fromUrlValue(String urlValue) {
+        for (SpacedRepetitionSortBy sortBy : SpacedRepetitionSortBy.values()) {
+            if (sortBy.getUrlValue().equals(urlValue)) {
+                return sortBy;
+            }
+        }
+        return null;
+    }
 }

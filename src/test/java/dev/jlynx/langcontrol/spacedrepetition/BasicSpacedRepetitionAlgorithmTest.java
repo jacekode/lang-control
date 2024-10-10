@@ -2,150 +2,43 @@ package dev.jlynx.langcontrol.spacedrepetition;
 
 import dev.jlynx.langcontrol.lang.LanguageCode;
 import dev.jlynx.langcontrol.flashcard.WordFlashcard;
-import org.junit.jupiter.api.BeforeAll;
+import dev.jlynx.langcontrol.util.DateTimeTools;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Clock;
-import java.time.LocalDate;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.function.LongFunction;
 import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 class BasicSpacedRepetitionAlgorithmTest {
 
-    private static BasicSpacedRepetitionAlgorithm underTest;
+    private BasicSpacedRepetitionAlgorithm underTest;
 
-    @BeforeAll
-    static void beforeAll() {
-        underTest = new BasicSpacedRepetitionAlgorithm();
-    }
+    private DateTimeTools mockDtt;
 
-    public static Stream<Arguments> parametersWithAtLeastOneNull() {
-        WordFlashcard cardNotNull = cardInInitialState();
-        RatingType ratingNotNull = RatingType.LEARN_NEXT;
-        return Stream.of(
-                Arguments.of(cardNotNull, null),
-                Arguments.of(null, ratingNotNull),
-                Arguments.of(null, null)
-        );
-    }
-
-    public static Stream<RatingType> allReviewRatingTypes() {
-        return Stream.of(RatingType.REVIEW_CANNOT_SOLVE, RatingType.REVIEW_DIFFICULT,
-                RatingType.REVIEW_NORMAL, RatingType.REVIEW_DIFFICULT);
-    }
-
-    public static Stream<RatingType> allLearnRatingTypes() {
-        return Stream.of(RatingType.LEARN_PREVIOUS, RatingType.LEARN_NORMAL,
-                RatingType.LEARN_NEXT, RatingType.LEARN_TO_REVIEW_MODE);
-    }
-
-    public static WordFlashcard cardInInitialState() {
-        return WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("test front")
-                .withTargetWord("test back")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .build();
-    }
-
-    public static WordFlashcard cardInLearnModeStepTwo() {
-        WordFlashcard flashcard = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("test front")
-                .withTargetWord("test back")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .build();
-        flashcard.setLearnModeStep(LearnModeStep.TWO);
-        return flashcard;
-    }
-
-    public static WordFlashcard cardInLearnModeStepThree() {
-        WordFlashcard flashcard = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("test front")
-                .withTargetWord("test back")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .build();
-        flashcard.setLearnModeStep(LearnModeStep.THREE);
-        return flashcard;
-    }
-
-    public static Stream<WordFlashcard> allCardsInLearnModeFromTheBeginning() {
-        return Stream.of(cardInInitialState(), cardInLearnModeStepTwo(), cardInLearnModeStepThree());
-    }
-
-    public static WordFlashcard cardInInitialReviewModeState() {
-        return WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("test front")
-                .withTargetWord("test back")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .build();
-    }
-
-    public static WordFlashcard cardInReviewModeWithData() {
-        WordFlashcard flashcard = cardInInitialReviewModeState();
-        flashcard.setLastReviewInUTC(LocalDateTime
-                .of(2022, 5, 23, 9, 23, 47, 1234));
-        flashcard.setCurrentIntervalDays(5.4);
-        flashcard.setNextReviewInUTC(flashcard.getLastReviewInUTC().plusDays(5));
-        flashcard.setNextReviewWithoutTimeInUTC(flashcard.getNextReviewInUTC().toLocalDate());
-        return flashcard;
-    }
-
-    public static WordFlashcard cardInReviewModeWithIntervalLessThanMinimum() {
-        WordFlashcard flashcard = cardInInitialReviewModeState();
-        flashcard.setLastReviewInUTC(LocalDateTime
-                .of(2022, 5, 23, 9, 23, 47, 1234));
-        flashcard.setCurrentIntervalDays(1.4);
-        flashcard.setNextReviewInUTC(flashcard.getLastReviewInUTC().plusDays(1));
-        flashcard.setNextReviewWithoutTimeInUTC(flashcard.getNextReviewInUTC().toLocalDate());
-        return flashcard;
-    }
-
-    public static Stream<WordFlashcard> cardsInReviewModeWithIntervalDaysLessThanOrEqualToMinimum() {
-        return Stream.of(cardInInitialReviewModeState(), cardInReviewModeWithIntervalLessThanMinimum());
-    }
-
-    public static Stream<WordFlashcard> allCardsInReviewMode() {
-        WordFlashcard cardWithFactorsCloseToUpperLimit = cardInReviewModeWithData();
-        cardWithFactorsCloseToUpperLimit.setiFactor(WordFlashcard.I_FACTOR_UPPER_LIMIT - 0.001);
-        cardWithFactorsCloseToUpperLimit.setrFactor(WordFlashcard.R_FACTOR_UPPER_LIMIT - 0.001);
-
-        WordFlashcard cardWithFactorsCloseToBottomLimit = cardInReviewModeWithData();
-        cardWithFactorsCloseToBottomLimit.setiFactor(WordFlashcard.I_FACTOR_BOTTOM_LIMIT + 0.001);
-        cardWithFactorsCloseToBottomLimit.setrFactor(WordFlashcard.R_FACTOR_BOTTOM_LIMIT + 0.001);
-
-        return Stream.of(cardInInitialReviewModeState(), cardInReviewModeWithData(),
-                cardInReviewModeWithIntervalLessThanMinimum(), cardWithFactorsCloseToUpperLimit,
-                cardWithFactorsCloseToBottomLimit);
-    }
-
-    public static WordFlashcard cardInLearnModeWithReviewModeData() {
-        WordFlashcard flashcard = cardInInitialState();
-        flashcard.setLastReviewInUTC(LocalDateTime
-                .of(2022, 5, 23, 9, 23, 47, 1234));
-        flashcard.setCurrentIntervalDays(5.4);
-        flashcard.setNextReviewInUTC(flashcard.getLastReviewInUTC().plusDays(5));
-        flashcard.setNextReviewWithoutTimeInUTC(flashcard.getNextReviewInUTC().toLocalDate());
-        return flashcard;
+    @BeforeEach
+    void setUp() {
+        mockDtt = Mockito.mock(DateTimeTools.class);
+        underTest = new BasicSpacedRepetitionAlgorithm(mockDtt);
     }
 
 
     @ParameterizedTest
-    @MethodSource("parametersWithAtLeastOneNull")
-    void apply_ShouldThrowException_WhenAtLeastOneArgumentIsNull(WordFlashcard flashcard, RatingType rating) {
-        // when
+    @MethodSource("paramsWithNullValues")
+    void apply_ShouldThrow_WhenArgsContainNull(WordFlashcard flashcard, RatingType rating) {
+        // given
         Exception thrown = null;
+
+        // when
         try {
             underTest.apply(flashcard, rating);
         } catch (Exception e) {
@@ -153,426 +46,264 @@ class BasicSpacedRepetitionAlgorithmTest {
         }
 
         // then
-        assertNotNull(thrown);
         assertTrue(thrown instanceof IllegalArgumentException);
     }
 
     @ParameterizedTest
-    @MethodSource("allReviewRatingTypes")
-    void apply_ShouldThrowException_WhenCardIsInLearnModeAndRatingIsOfReviewMode(RatingType rating) {
+    @MethodSource("reviewRatingTypes")
+    void apply_ShouldThrow_WhenCardIsInLearnModeAndRatingIsForReviewMode(RatingType reviewRating) {
         // given
-        WordFlashcard testFlashcard = cardInInitialState();
+        WordFlashcard learnModeCard = cardInInitialLearnMode();
+        Exception thrown = null;
 
         // when
-        Exception thrown = null;
         try {
-            underTest.apply(testFlashcard, rating);
+            underTest.apply(learnModeCard, reviewRating);
         } catch (Exception e) {
             thrown = e;
         }
 
         // then
-        assertNotNull(thrown);
         assertTrue(thrown instanceof IllegalStateException);
     }
 
     @ParameterizedTest
-    @MethodSource("allLearnRatingTypes")
-    void apply_ShouldThrowException_WhenCardIsInReviewModeAndRatingIsOfReviewMode(RatingType rating) {
+    @MethodSource("learnRatingTypes")
+    void apply_ShouldThrow_WhenCardIsInReviewModeAndRatingIsForLearnMode(RatingType learnRating) {
         // given
-        WordFlashcard testFlashcard = cardInInitialState();
+        WordFlashcard reviewModeCard = cardInInitialReviewMode();
+        Exception thrown = null;
 
         // when
-        underTest.apply(testFlashcard, RatingType.LEARN_TO_REVIEW_MODE);
-        Exception thrown = null;
         try {
-            underTest.apply(testFlashcard, rating);
+            underTest.apply(reviewModeCard, learnRating);
         } catch (Exception e) {
             thrown = e;
         }
 
         // then
-        assertNotNull(thrown);
         assertTrue(thrown instanceof IllegalStateException);
     }
 
     @Test
-    void apply_ShouldNotChangeLearnViewDateTime_WhenLearnModeStepIsOneAndRatingIsLearnPrevious() {
+    void apply_ShouldKeepLearnModeStep_WhenLearnModeStepIsOneAndRatingIsLearnDontKnow() {
         // given
-        WordFlashcard testFlashcard = cardInInitialState();
-        RatingType ratingPrevious = RatingType.LEARN_PREVIOUS;
-        LocalDateTime expectedLearnViewAfterOp = LocalDateTime
-                .of(2017, 5, 27, 11, 46, 23);
-
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(expectedLearnViewAfterOp);
+        WordFlashcard stepOneFlashcard = cardInLearnModeStepOne();
+        RatingType rating = RatingType.LEARN_DONT_KNOW;
+        LocalDateTime ldtNow = LocalDateTime.of(2017, 5, 27, 11, 46, 23);
+        LocalDateTime expectedNextView = ldtNow.plusMinutes(1);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
 
         // when
-            underTest.apply(testFlashcard, ratingPrevious);
-        }
+        underTest.apply(stepOneFlashcard, rating);
 
         // then
-        assertEquals(expectedLearnViewAfterOp, testFlashcard.getNextView());
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedNextView, stepOneFlashcard.getNextView());
+        assertEquals(1, stepOneFlashcard.getCurrentInterval());
+        assertEquals(LearnModeStep.ONE, stepOneFlashcard.getLearnModeStep());
+        assertTrue(stepOneFlashcard.isInLearnMode());
     }
 
     @Test
-    void apply_ShouldSetLearnViewInOneMinuteFromNow_WhenLearnModeStepIsOneAndRatingIsLearnNormal() {
+    void apply_ShouldSetLearnModeStepToTwo_WhenLearnModeStepIsOneAndRatingIsLearnKnow() {
         // given
-        WordFlashcard testFlashcard = cardInInitialState();
-        RatingType ratingNormal = RatingType.LEARN_NORMAL;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(1);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNormal);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.ONE, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldIncreaseLearnModeStepAndSetLearnViewInTenMinutesFromNow_WhenLearnModeStepIsOneAndRatingIsLearnNext() {
-        // given
-        WordFlashcard testFlashcard = cardInInitialState();
-        RatingType ratingNext = RatingType.LEARN_NEXT;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(10);
-        try (MockedStatic<LocalDateTime> mockedStaticLCD = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLCD.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNext);
-
-            // then
-            mockedStaticLCD.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.TWO, testFlashcard.getLearnModeStep());
-    }
-
-    @ParameterizedTest
-    @MethodSource("allCardsInLearnModeFromTheBeginning")
-    void apply_ShouldSwitchToReviewModeAndSetReviewInTwoDaysFromNow_WhenCardWasInLearnModeFromTheBeginning(WordFlashcard testFlashcard) {
-        // given
-        RatingType ratingToReviewMode = RatingType.LEARN_TO_REVIEW_MODE;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextReviewAfterOpExpected = nowLDTForMock.plusDays(2);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingToReviewMode);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertFalse(testFlashcard.isInLearnMode());
-        assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
-        assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
-    }
-
-    @Test
-    void apply_ShouldDecreaseLearnModeStepAndSetLearnViewInOneMinuteFromNow_WhenLearnModeStepIsTwoAndRatingIsLearnPrevious() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepTwo();
-        RatingType ratingPrevious = RatingType.LEARN_PREVIOUS;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(1);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingPrevious);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.ONE, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldSetLearnViewInTenMinutesFromNow_WhenLearnModeStepIsTwoAndRatingIsLearnNormal() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepTwo();
-        RatingType ratingNormal = RatingType.LEARN_NORMAL;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(10);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNormal);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.TWO, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldIncreaseLearnModeStepAndSetLearnViewInOneDayFromNow_WhenLearnModeStepIsTwoAndRatingIsLearnNext() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepTwo();
-        RatingType ratingNext = RatingType.LEARN_NEXT;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusDays(1);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNext);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.THREE, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldDecreaseLearnModeStepAndSetLearnViewInTenMinutesFromNow_WhenLearnModeStepIsThreeAndRatingIsLearnPrevious() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepThree();
-        RatingType ratingPrevious = RatingType.LEARN_PREVIOUS;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(10);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingPrevious);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.TWO, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldSetLearnViewInOneDayFromNow_WhenLearnModeStepIsThreeAndRatingIsLearnNormal() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepThree();
-        RatingType ratingNormal = RatingType.LEARN_NORMAL;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusDays(1);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNormal);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-        assertEquals(LearnModeStep.THREE, testFlashcard.getLearnModeStep());
-    }
-
-    @Test
-    void apply_ShouldSwitchToReviewModeAndSetReviewInTwoDaysFromNow_WhenLearnModeStepIsThreeAndRatingIsLearnNext() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeStepThree();
-        RatingType ratingNormal = RatingType.LEARN_NEXT;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextReviewAfterOpExpected = nowLDTForMock.plusDays(2);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNormal);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertFalse(testFlashcard.isInLearnMode());
-        assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
-        assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
-    }
-
-    @Test
-    void apply_ShouldUseThePreviouslySavedIntervalDays_WhenCardIsInLearnModeWithReviewModeDataAndRatingIsLearnToReviewMode() {
-        // given
-        WordFlashcard testFlashcard = cardInLearnModeWithReviewModeData();
-        double intervalDaysBeforeOp = testFlashcard.getCurrentIntervalDays();
-        RatingType ratingToReviewMode = RatingType.LEARN_TO_REVIEW_MODE;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDate nextReviewWithoutTimeAfterOpExpected = nowLDTForMock.plusDays(5).toLocalDate();
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingToReviewMode);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertFalse(testFlashcard.isInLearnMode());
-        assertEquals(nextReviewWithoutTimeAfterOpExpected, testFlashcard.getNextReviewWithoutTimeInUTC());
-        assertEquals(intervalDaysBeforeOp, testFlashcard.getCurrentIntervalDays());
-    }
-
-    @ParameterizedTest
-    @MethodSource("cardsInReviewModeWithIntervalDaysLessThanOrEqualToMinimum")
-    void apply_ShouldSwitchToLearnModeAndSetLearnViewInOneMinuteFromNow_WhenIntervalIsLessThanOrEqualToMinimumAndRatingIsReviewCannotSolve(WordFlashcard testFlashcard) {
-        // given
-        RatingType ratingCannotSolve = RatingType.REVIEW_CANNOT_SOLVE;
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
-        LocalDateTime nextLearnViewAfterOpExpected = nowLDTForMock.plusMinutes(1);
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingCannotSolve);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()));
-        }
-        assertTrue(testFlashcard.isInLearnMode());
-        assertEquals(nextLearnViewAfterOpExpected, testFlashcard.getNextView());
-    }
-
-    @Test
-    void apply_ShouldSetIntervalDaysToMinimumAndNotChangeFactors_WhenIntervalIsMoreThanMinimumAndRatingIsReviewCannotSolve() {
-        // given
-        WordFlashcard testFlashcard = cardInReviewModeWithData();
-        RatingType ratingCannotSolve = RatingType.REVIEW_CANNOT_SOLVE;
-        double rFactorBeforeOp = testFlashcard.getrFactor();
-        double iFactorBeforeOp = testFlashcard.getiFactor();
+        WordFlashcard stepOneFlashcard = cardInLearnModeStepOne();
+        RatingType rating = RatingType.LEARN_KNOW;
+        LocalDateTime ldtNow = LocalDateTime.of(2017, 5, 27, 11, 46, 23, 1234);
+        LocalDateTime expectedNextView = ldtNow.plusMinutes(10);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
 
         // when
-        underTest.apply(testFlashcard, ratingCannotSolve);
+        underTest.apply(stepOneFlashcard, rating);
 
         // then
-        assertEquals(2.0, testFlashcard.getCurrentIntervalDays());
-        assertEquals(iFactorBeforeOp, testFlashcard.getiFactor());
-        assertEquals(rFactorBeforeOp, testFlashcard.getrFactor());
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedNextView, stepOneFlashcard.getNextView());
+        assertEquals(10, stepOneFlashcard.getCurrentInterval());
+        assertEquals(LearnModeStep.TWO, stepOneFlashcard.getLearnModeStep());
+        assertTrue(stepOneFlashcard.isInLearnMode());
+    }
+
+    @Test
+    void apply_ShouldSetLearnModeStepToOne_WhenLearnModeStepIsTwoAndRatingIsLearnDontKnow() {
+        // given
+        WordFlashcard stepTwoflashcard = cardInInitialLearnMode();
+        RatingType rating = RatingType.LEARN_DONT_KNOW;
+        LocalDateTime ldtNow = LocalDateTime.of(2017, 5, 27, 11, 46, 23, 1234);
+        LocalDateTime expectedNextView = ldtNow.plusMinutes(1);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
+
+        // when
+        underTest.apply(stepTwoflashcard, rating);
+
+        // then
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedNextView, stepTwoflashcard.getNextView());
+        assertEquals(LearnModeStep.ONE, stepTwoflashcard.getLearnModeStep());
+        assertTrue(stepTwoflashcard.isInLearnMode());
+    }
+
+    @Test
+    void apply_ShouldSwitchToReviewModeAndSetNextViewIn24Hours_WhenLearnModeStepIsTwoAndRatingIsLearnKnow() {
+        // given
+        WordFlashcard stepTwoflashcard = cardInInitialLearnMode();
+        RatingType rating = RatingType.LEARN_KNOW;
+        LocalDateTime ldtNow = LocalDateTime.of(2017, 5, 27, 11, 46, 23, 1234);
+        LocalDateTime expectedNextView = ldtNow.plusHours(24);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
+
+        // when
+        underTest.apply(stepTwoflashcard, rating);
+
+        // then
+        then(mockDtt).should().getNowUtc();
+        assertFalse(stepTwoflashcard.isInLearnMode());
+        assertEquals(expectedNextView, stepTwoflashcard.getNextView());
     }
 
     @ParameterizedTest
-    @MethodSource("allCardsInReviewMode")
-    void apply_ShouldDecreaseIntervalAndFactorsAndSetNextReviewAccordingly_WhenRatingIsReviewDifficult(WordFlashcard testFlashcard) {
+    @MethodSource("reviewModeCards")
+    void apply_ShouldIncreaseIntervalAndFactor_WhenRatingIsReviewRemember(WordFlashcard flashcard) {
         // given
-        RatingType ratingDifficult = RatingType.REVIEW_DIFFICULT;
-        double factorUpdateUnit = WordFlashcard.FACTOR_UPDATE_UNIT;
-        double rFactorBottomLimit = WordFlashcard.R_FACTOR_BOTTOM_LIMIT;
-        double iFactorBottomLimit = WordFlashcard.I_FACTOR_BOTTOM_LIMIT;
-        double intervalDaysBeforeOp = testFlashcard.getCurrentIntervalDays();
-        double rFactorBeforeOp = testFlashcard.getrFactor();
-        double iFactorBeforeOp = testFlashcard.getiFactor();
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
+        RatingType rating = RatingType.REVIEW_REMEMBER;
+        LocalDateTime ldtNow = LocalDateTime.of(2022, 5, 11, 9, 23, 47, 1234);
+        Long intervalBefore = flashcard.getCurrentInterval();
+        Float iFactorBefore = flashcard.getIFactor();
+        Float rFactorBefore = flashcard.getRFactor();
+        long expectedInterval = (long) (intervalBefore * iFactorBefore);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
 
-        double intervalDaysAfterOpExpected = intervalDaysBeforeOp * rFactorBeforeOp;
-        double rFactorAfterOpExpected = Math.max(rFactorBeforeOp - factorUpdateUnit, rFactorBottomLimit);
-        double iFactorAfterOpExpected = Math.max(iFactorBeforeOp - factorUpdateUnit, iFactorBottomLimit);
-        LocalDateTime nextReviewAfterOpExpected = nowLDTForMock.plusDays(BigDecimal
-                .valueOf(intervalDaysAfterOpExpected)
-                .setScale(0, RoundingMode.HALF_DOWN)
-                .intValue());
+        // when
+        underTest.apply(flashcard, rating);
 
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingDifficult);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()), Mockito.atLeastOnce());
-        }
-        assertEquals(intervalDaysAfterOpExpected, testFlashcard.getCurrentIntervalDays());
-        assertEquals(rFactorAfterOpExpected, testFlashcard.getrFactor());
-        assertEquals(iFactorAfterOpExpected, testFlashcard.getiFactor());
-        assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
-        assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
+        // then
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedInterval, flashcard.getCurrentInterval());
+        assertEquals(ldtNow.plusMinutes(expectedInterval), flashcard.getNextView());
+        assertTrue(iFactorBefore <= flashcard.getIFactor() &&
+                flashcard.getIFactor() <= BasicSpacedRepetitionAlgorithm.I_FACTOR_UPPER_LIMIT);
+        assertTrue(rFactorBefore <= flashcard.getRFactor() &&
+                flashcard.getRFactor() <= BasicSpacedRepetitionAlgorithm.R_FACTOR_UPPER_LIMIT);
     }
 
     @ParameterizedTest
-    @MethodSource("allCardsInReviewMode")
-    void apply_ShouldIncreaseIntervalDaysSlightlyAndNotChangeFactorsAndSetNextReviewAccordingly_WhenRatingIsReviewNormal(WordFlashcard testFlashcard) {
+    @MethodSource("reviewModeCards")
+    void apply_ShouldHalveInterval_WhenRatingIsReviewPartially(WordFlashcard flashcard) {
         // given
-        RatingType ratingNormal = RatingType.REVIEW_NORMAL;
-        double intervalDaysBeforeOp = testFlashcard.getCurrentIntervalDays();
-        double rFactorBeforeOp = testFlashcard.getrFactor();
-        double iFactorBeforeOp = testFlashcard.getiFactor();
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
+        RatingType rating = RatingType.REVIEW_PARTIALLY;
+        LocalDateTime ldtNow = LocalDateTime.of(2022, 5, 11, 9, 23, 47, 1234);
+        Long intervalBefore = flashcard.getCurrentInterval();
+        Float iFactorBefore = flashcard.getIFactor();
+        Float rFactorBefore = flashcard.getRFactor();
+        long expectedInterval = intervalBefore / 2;
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
 
-        double intervalDaysAfterOpExpected = intervalDaysBeforeOp * 1.1;
-        LocalDateTime nextReviewAfterOpExpected = nowLDTForMock.plusDays(BigDecimal
-                .valueOf(intervalDaysAfterOpExpected)
-                .setScale(0, RoundingMode.HALF_DOWN)
-                .intValue());
+        // when
+        underTest.apply(flashcard, rating);
 
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
-
-            // when
-            underTest.apply(testFlashcard, ratingNormal);
-
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()), Mockito.atLeastOnce());
-        }
-        assertEquals(intervalDaysAfterOpExpected, testFlashcard.getCurrentIntervalDays());
-        assertEquals(rFactorBeforeOp, testFlashcard.getrFactor());
-        assertEquals(iFactorBeforeOp, testFlashcard.getiFactor());
-        assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
-        assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
+        // then
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedInterval, flashcard.getCurrentInterval());
+        assertEquals(ldtNow.plusMinutes(expectedInterval), flashcard.getNextView());
+        assertEquals(iFactorBefore, flashcard.getIFactor());
+        assertEquals(rFactorBefore, flashcard.getRFactor());
     }
 
     @ParameterizedTest
-    @MethodSource("allCardsInReviewMode")
-    void apply_ShouldIncreaseIntervalDaysByIFactorAndIncreaseFactorsAndSetNextReviewAccordingly_WhenRatingIsReviewEasy(WordFlashcard testFlashcard) {
+    @MethodSource("reviewModeCards")
+    void apply_ShouldDecreaseIntervalAndFactors_WhenRatingIsReviewForgot(WordFlashcard flashcard) {
         // given
-        RatingType ratingEasy = RatingType.REVIEW_EASY;
-        double factorUpdateUnit = WordFlashcard.FACTOR_UPDATE_UNIT;
-        double rFactorUpperLimit = WordFlashcard.R_FACTOR_UPPER_LIMIT;
-        double iFactorUpperLimit = WordFlashcard.I_FACTOR_UPPER_LIMIT;
-        double intervalDaysBeforeOp = testFlashcard.getCurrentIntervalDays();
-        double rFactorBeforeOp = testFlashcard.getrFactor();
-        double iFactorBeforeOp = testFlashcard.getiFactor();
-        LocalDateTime nowLDTForMock = LocalDateTime
-                .of(2022, 5, 11, 9, 23, 47, 1234);
+        RatingType rating = RatingType.REVIEW_FORGOT;
+        LocalDateTime ldtNow = LocalDateTime.of(2022, 5, 11, 9, 23, 47, 1234);
+        Long intervalBefore = flashcard.getCurrentInterval();
+        Float iFactorBefore = flashcard.getIFactor();
+        Float rFactorBefore = flashcard.getRFactor();
+        long expectedInterval = (long) (intervalBefore * rFactorBefore);
+        given(mockDtt.getNowUtc()).willReturn(ldtNow);
 
-        double intervalDaysAfterOpExpected = intervalDaysBeforeOp * iFactorBeforeOp;
-        double rFactorAfterOpExpected = Math.min(rFactorBeforeOp + factorUpdateUnit, rFactorUpperLimit);
-        double iFactorAfterOpExpected = Math.min(iFactorBeforeOp + factorUpdateUnit, iFactorUpperLimit);
-        LocalDateTime nextReviewAfterOpExpected = nowLDTForMock.plusDays(BigDecimal
-                .valueOf(intervalDaysAfterOpExpected)
-                .setScale(0, RoundingMode.HALF_DOWN)
-                .intValue());
+        // when
+        underTest.apply(flashcard, rating);
 
-        try (MockedStatic<LocalDateTime> mockedStaticLDT = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStaticLDT.when(() -> LocalDateTime.now(Clock.systemUTC())).thenReturn(nowLDTForMock);
+        // then
+        then(mockDtt).should().getNowUtc();
+        assertEquals(expectedInterval, flashcard.getCurrentInterval());
+        assertEquals(ldtNow.plusMinutes(expectedInterval), flashcard.getNextView());
+        assertTrue(iFactorBefore >= flashcard.getIFactor() &&
+                flashcard.getIFactor() >= BasicSpacedRepetitionAlgorithm.I_FACTOR_BOTTOM_LIMIT);
+        assertTrue(rFactorBefore >= flashcard.getRFactor() &&
+                flashcard.getRFactor() >= BasicSpacedRepetitionAlgorithm.R_FACTOR_BOTTOM_LIMIT);
+    }
 
-            // when
-            underTest.apply(testFlashcard, ratingEasy);
 
-            // then
-            mockedStaticLDT.verify(() -> LocalDateTime.now(Clock.systemUTC()), Mockito.atLeastOnce());
-        }
-        assertEquals(intervalDaysAfterOpExpected, testFlashcard.getCurrentIntervalDays());
-        assertEquals(rFactorAfterOpExpected, testFlashcard.getrFactor());
-        assertEquals(iFactorAfterOpExpected, testFlashcard.getiFactor());
-        assertEquals(nextReviewAfterOpExpected, testFlashcard.getNextReviewInUTC());
-        assertEquals(nextReviewAfterOpExpected.toLocalDate(), testFlashcard.getNextReviewWithoutTimeInUTC());
+    public static Stream<Arguments> paramsWithNullValues() {
+        WordFlashcard cardNotNull = cardInInitialLearnMode();
+        RatingType ratingNotNull = RatingType.LEARN_KNOW;
+        return Stream.of(
+                Arguments.of(cardNotNull, null),
+                Arguments.of(null, ratingNotNull),
+                Arguments.of(null, null)
+        );
+    }
+
+    public static Stream<RatingType> reviewRatingTypes() {
+        return Stream.of(
+                RatingType.REVIEW_REMEMBER,
+                RatingType.REVIEW_PARTIALLY,
+                RatingType.REVIEW_FORGOT
+        );
+    }
+
+    public static Stream<RatingType> learnRatingTypes() {
+        return Stream.of(
+                RatingType.LEARN_KNOW,
+                RatingType.LEARN_DONT_KNOW
+        );
+    }
+
+    /**
+     * Returns a {@code WordFlashcard} object in initial state (LearnModeStep.TWO).
+     * @return a {@code WordFlashcard} object in initial state
+     */
+    public static WordFlashcard cardInInitialLearnMode() {
+        return WordFlashcard.inInitialLearnMode()
+                .withTranslatedWord("translation")
+                .withTargetWord("target")
+                .withSourceLang(LanguageCode.ENGLISH)
+                .withTargetLang(LanguageCode.SPANISH)
+                .build();
+    }
+
+    public static WordFlashcard cardInLearnModeStepOne() {
+        WordFlashcard flashcard = cardInInitialLearnMode();
+        flashcard.setLearnModeStep(LearnModeStep.ONE);
+        return flashcard;
+    }
+
+    public static WordFlashcard cardInInitialReviewMode() {
+        return WordFlashcard.inInitialReviewMode()
+                .withTranslatedWord("translation")
+                .withTargetWord("target")
+                .withSourceLang(LanguageCode.ENGLISH)
+                .withTargetLang(LanguageCode.SPANISH)
+                .build();
+    }
+
+    public static Stream<WordFlashcard> cardsInReviewModeWithHigherInterval() {
+        LongFunction<WordFlashcard> cardWithDaysInterval = days -> {
+            WordFlashcard flashcard = cardInInitialReviewMode();
+            long interval = Duration.ofDays(12).toMinutes();
+            flashcard.setCurrentInterval(interval);
+            return flashcard;
+        };
+        return Stream.of(9, 10, 11, 12, 13, 14, 15, 36, 71, 143)
+                .map(cardWithDaysInterval::apply);
+    }
+
+    public static Stream<WordFlashcard> reviewModeCards() {
+        return Stream.concat(
+                Stream.of(cardInInitialReviewMode()),
+                cardsInReviewModeWithHigherInterval()
+        );
     }
 }

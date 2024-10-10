@@ -1,5 +1,7 @@
 package dev.jlynx.langcontrol.flashcard;
 
+import dev.jlynx.langcontrol.spacedrepetition.BasicSpacedRepetitionAlgorithm;
+import dev.jlynx.langcontrol.util.DateTimeTools;
 import jakarta.persistence.*;
 import dev.jlynx.langcontrol.deck.Deck;
 import dev.jlynx.langcontrol.lang.LanguageCode;
@@ -17,13 +19,16 @@ import java.time.*;
 public class Flashcard {
 
     @Transient
-    protected static final float INITIAL_INCREASE_FACTOR = 1.3F;
+    protected static final float INITIAL_IFACTOR = BasicSpacedRepetitionAlgorithm.INITIAL_IFACTOR;
 
     @Transient
-    protected static final float INITIAL_REDUCE_FACTOR = 0.5F;
+    protected static final float INITIAL_RFACTOR = BasicSpacedRepetitionAlgorithm.INITIAL_RFACTOR;
 
     @Transient
-    public static final long INITIAL_REVIEW_INTERVAL = Duration.ofHours(24).toMinutes();
+    public static final long INITIAL_REVIEW_INTERVAL = BasicSpacedRepetitionAlgorithm.INITIAL_REVIEW_INTERVAL;
+
+    @Transient
+    public static final LearnModeStep INIT_LMS = BasicSpacedRepetitionAlgorithm.INIT_LMS;
 
 
     @Id
@@ -85,7 +90,7 @@ public class Flashcard {
             this.currentInterval = INITIAL_REVIEW_INTERVAL;
         } else {
             this.inLearnMode = true;
-            this.learnModeStep = LearnModeStep.TWO;
+            this.learnModeStep = INIT_LMS;
             this.currentInterval = Duration
                     .of(learnModeStep.getAmountToAdd(), learnModeStep.getTemporalUnit())
                     .toMinutes();
@@ -93,16 +98,21 @@ public class Flashcard {
         this.nextView = LocalDateTime.now(Clock.systemUTC()).plusMinutes(currentInterval);
 
         this.id = null;
-        this.iFactor = INITIAL_INCREASE_FACTOR;
-        this.rFactor = INITIAL_REDUCE_FACTOR;
-        this.createdAt = LocalDateTime.now(Clock.systemUTC());
+        this.iFactor = INITIAL_IFACTOR;
+        this.rFactor = INITIAL_RFACTOR;
+        this.createdAt = new DateTimeTools().getNowUtc();
         this.deck = deck;
         this.sourceLang = sourceLang;
         this.targetLang = targetLang;
     }
 
+    /**
+     * Updates the new current interval value and sets the {@code nextView} datetime accordingly.
+     *
+     * @param newInterval flashcard's new interval in minutes
+     */
     public void updateNextView(long newInterval) {
         this.setCurrentInterval(newInterval);
-        this.setNextView(LocalDateTime.now(Clock.systemUTC()).plusMinutes(this.getCurrentInterval()));
+        this.setNextView(new DateTimeTools().getNowUtc().plusMinutes(this.getCurrentInterval()));
     }
 }

@@ -1,32 +1,31 @@
 package dev.jlynx.langcontrol.spacedrepetition;
 
-import dev.jlynx.langcontrol.deck.Deck;
-import dev.jlynx.langcontrol.lang.LanguageCode;
-import dev.jlynx.langcontrol.flashcard.WordFlashcard;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.jlynx.langcontrol.flashcard.WordFlashcardService;
 import dev.jlynx.langcontrol.spacedrepetition.dto.FlashcardRatingRequest;
+import dev.jlynx.langcontrol.spacedrepetition.dto.FlashcardRatingResponse;
+import dev.jlynx.langcontrol.url.SortOrder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mockito;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.time.LocalDateTime;
-import java.util.*;
 import java.util.stream.Stream;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.any;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,8 +33,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(SpacedRepetitionController.class)
 class SpacedRepetitionControllerTest {
 
+    private static final String baseUrl = "/api/sr";
+    private static final String username = "username";
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper json;
 
     @MockBean
     private WordFlashcardService mockedWordFlashcardService;
@@ -43,315 +48,162 @@ class SpacedRepetitionControllerTest {
     @MockBean
     private SpacedRepetitionService mockedSpacedRepetitionService;
 
-    public static Stream<Arguments> invalidHandleFlashcardRatingMethodParams() {
-        return Stream.of(
-                Arguments.arguments(new FlashcardRatingRequest(null, 2L), new ArrayDeque<>()),
-                Arguments.arguments(new FlashcardRatingRequest(RatingType.LEARN_NEXT, null), new ArrayDeque<>()),
-                Arguments.arguments(new FlashcardRatingRequest(RatingType.LEARN_NEXT, 0L), new ArrayDeque<>())
-        );
+
+    @WithAnonymousUser
+    @Test
+    void getReadyForViewCardsByDeck_ShouldReturnUnauthorizedStatusCode_WhenUserNotLoggedIn() throws Exception {
+        mockMvc.perform(get(baseUrl)
+                        .param("deck", "1")
+                )
+                .andExpect(status().isUnauthorized());
     }
 
-    public static ArrayDeque<WordFlashcard> threeElementFlashcardArrayDequeFirstInLearnMode() {
-        Deck testDeck = new Deck(54L, "test deck", null,
-                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+    @WithMockUser(username = username)
+    @Test
+    void getReadyForViewCardsByDeck_ShouldPassOnDefaultQueryParamValues() throws Exception {
+        // given
+        long deckId = 16;
+//        given(mockedWordFlashcardService.fetchAllReadyForViewByDeck(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
+//                .willReturn(new ArrayList<>());
 
-        WordFlashcard card1 = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("front 1")
-                .withTargetWord("back 1")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.GERMAN)
-                .withDeck(testDeck)
-                .build();
-        WordFlashcard card2 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front 2")
-                .withTargetWord("back 2")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .withDeck(testDeck)
-                .build();
-        WordFlashcard card3 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front 3")
-                .withTargetWord("back 3")
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.ENGLISH)
-                .withDeck(testDeck)
-                .build();
-        testDeck.getFlashcards().add(card1);
-        testDeck.getFlashcards().add(card2);
-        testDeck.getFlashcards().add(card3);
-        return new ArrayDeque<>(List.of(card1, card2, card3));
+        // when, then
+        mockMvc.perform(get(baseUrl)
+                        .param("deck", String.valueOf(deckId))
+                )
+                .andExpect(status().isOk());
+
+        // then
+        then(mockedWordFlashcardService)
+                .should(times(1))
+                .fetchReadyForView(deckId, 10, SpacedRepetitionSortBy.NEXT_VIEW, SortOrder.ASC);
     }
 
-    public static ArrayDeque<WordFlashcard> threeElementFlashcardArrayDequeFirstInReviewMode() {
-        Deck testDeck = new Deck(54L, "test deck", null,
-                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @MethodSource("invalidQueryParams")
+    void getReadyForViewCardsByDeck_ShouldReturnBadRequestStatusCode_WhenQueryParamsAreInvalid(
+            long deck,
+            int limit,
+            String sort,
+            String order
+    ) throws Exception {
+        // when, then
+        mockMvc.perform(get(baseUrl)
+                        .param("deck", String.valueOf(deck))
+                        .param("limit", String.valueOf(limit))
+                        .param("sort", sort)
+                        .param("order", order)
+                )
+                .andExpect(status().isBadRequest());
 
-        WordFlashcard card1 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front 1")
-                .withTargetWord("back 1")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH)
-                .withDeck(testDeck)
-                .build();
-        WordFlashcard card2 = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("front 2")
-                .withTargetWord("back 2")
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.GERMAN)
-                .withDeck(testDeck)
-                .build();
-        WordFlashcard card3 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front 3")
-                .withTargetWord("back 3")
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.ENGLISH)
-                .withDeck(testDeck)
-                .build();
-        testDeck.getFlashcards().add(card1);
-        testDeck.getFlashcards().add(card2);
-        testDeck.getFlashcards().add(card3);
-        return new ArrayDeque<>(List.of(card1, card2, card3));
+        // then
+        then(mockedWordFlashcardService).shouldHaveNoInteractions();
     }
 
-    public static ArrayDeque<WordFlashcard> oneElementFlashcardArrayDeque() {
-        Deck testDeck = new Deck(54L, "test deck", null,
-                LanguageCode.ENGLISH, LanguageCode.CZECH, new ArrayList<>());
+    @WithMockUser(username = username)
+    @ParameterizedTest
+    @MethodSource("validQueryParams")
+    void getReadyForViewCardsByDeck_ShouldPassOnValidQueryParams(
+            long deck,
+            int limit,
+            String sort,
+            String order
+    ) throws Exception {
+        // when, then
+        mockMvc.perform(get(baseUrl)
+                        .param("deck", String.valueOf(deck))
+                        .param("limit", String.valueOf(limit))
+                        .param("sort", sort)
+                        .param("order", order)
+                )
+                .andExpect(status().isOk());
 
-        WordFlashcard card3 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("front 1")
-                .withTargetWord("back 1")
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.ENGLISH)
-                .withDeck(testDeck)
-                .build();
-        testDeck.getFlashcards().add(card3);
-        return new ArrayDeque<>(List.of(card3));
+        // then
+        then(mockedWordFlashcardService)
+                .should(times(1))
+                .fetchReadyForView(deck, limit, SpacedRepetitionSortBy.fromUrlValue(sort), SortOrder.fromUrlValue(order));
     }
 
 
     @WithAnonymousUser
     @Test
-    void getReadyForViewCardsByDeck_ShouldReturnStatusCodeUnauthorized_WhenUserIsAnonymous() throws Exception {
-        mockMvc.perform(get("/review")
-                        .param("deck", "1")
-                        .param("timezone", "Europe/Warsaw"))
+    void handleFlashcardRating_ShouldReturnUnauthorizedStatusCode_WhenUserNotLoggedIn() throws Exception {
+        // given
+        FlashcardRatingRequest body = new FlashcardRatingRequest(5, RatingType.LEARN_KNOW);
+
+        // when, then
+        mockMvc.perform(post(baseUrl + "/rating")
+                        .content(json.writeValueAsString(body))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
                 .andExpect(status().isUnauthorized());
     }
 
-
-    @WithMockUser(username = "username")
-    @Test
-    void getReadyForViewCardsByDeck_ShouldRedirectToDecksPage_WhenReadyForReviewResultIsEmpty() throws Exception {
-        // given
-        given(mockedWordFlashcardService.fetchAllReadyForViewByDeck(
-                Mockito.anyLong(), Mockito.anyString(), Mockito.anyInt(), ))
-                .willReturn(new ArrayDeque<>());
-
-        // when
-        MvcResult mvcResult = mockMvc.perform(get("/review")
-                        .param("deck", "1")
-                        .param("timezone", "Europe/Warsaw"))
-                .andExpect(status().isFound())
-                .andReturn();
-
-        // then
-        then(mockedWordFlashcardService).should(times(1))
-                .fetchAllReadyForViewByDeck(
-                        Mockito.anyLong(), Mockito.anyString(), Mockito.anyInt(), );
-        assertEquals("redirect:/decks", Objects.requireNonNull(mvcResult.getModelAndView()).getViewName());
-    }
-
-
-    @WithMockUser(username = "username")
+    @WithMockUser(username = username)
     @ParameterizedTest
-    @CsvSource(value = {
-            "0,Europe/Warsaw",
-            "-1,Europe/Warsaw",
-            "1, ",
-            "1,'  '"},
-            ignoreLeadingAndTrailingWhitespace = false)
-    void getReadyForViewCardsByDeck_ShouldReturnBadRequestStatusCode_WhenParametersAreNotValid(long deckIdParam,
-                                                                                               String timezoneIdParam) throws Exception {
-        mockMvc.perform(get("/review")
-                        .param("deck", String.valueOf(deckIdParam))
-                        .param("timezone", timezoneIdParam))
+    @MethodSource("invalidFlashcardRatingRequests")
+    void handleFlashcardRating_ShouldReturnBadRequestStatusCode_WhenRequestBodyInvalid(FlashcardRatingRequest invalidBody) throws Exception {
+        // when, then
+        mockMvc.perform(post(baseUrl + "/rating")
+                        .content(json.writeValueAsString(invalidBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
                 .andExpect(status().isBadRequest());
     }
 
-    @WithMockUser(username = "username")
+    @WithMockUser(username = username)
     @Test
-    void getReadyForViewCardsByDeck_ShouldDisplayLearnPage_WhenTheFirstReadyForReviewCardIsInLearnMode() throws Exception {
+    void handleFlashcardRating_ShouldPassValidRequestBody() throws Exception {
         // given
-        long deckId = 23L;
-        String timezoneId = "America/Los_Angeles";
-        int limit = 10;
-        Deck testDeck = new Deck(34L, "test deck", null,
-                LanguageCode.SPANISH, LanguageCode.BULGARIAN, new ArrayList<>());
-        WordFlashcard cardLearnMode = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("learn front 1")
-                .withTargetWord("learn back 1")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH).build();
-        cardLearnMode.setId(7L);
-        WordFlashcard cardReviewMode1 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("review front 1")
-                .withTargetWord("review back 1")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.GERMAN).build();
-        cardReviewMode1.setId(36L);
-        WordFlashcard cardReviewMode2 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("review front 2")
-                .withTargetWord("review back 2")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.ENGLISH).build();
-        testDeck.getFlashcards().add(cardLearnMode);
-        testDeck.getFlashcards().add(cardReviewMode1);
-        testDeck.getFlashcards().add(cardReviewMode2);
+        FlashcardRatingRequest body = new FlashcardRatingRequest(5, RatingType.REVIEW_REMEMBER);
+        FlashcardRatingResponse expectedResponse = new FlashcardRatingResponse(5, false, false);
+        given(mockedSpacedRepetitionService.applyRating(any(), any())).willReturn(expectedResponse);
 
-        LocalDateTime lastReview = LocalDateTime
-                .of(2023, 3, 14, 16, 37, 21);
-        cardReviewMode2.setLastReviewInUTC(lastReview);
-        cardReviewMode2.setCurrentIntervalDays(11.6);
-        cardReviewMode2.setNextReviewInUTC(lastReview.plusDays(12));
-        cardReviewMode2.setNextReviewWithoutTimeInUTC(lastReview.plusDays(12).toLocalDate());
-        cardReviewMode2.setId(76L);
-        Deque<WordFlashcard> learnCardFirstDeque = new ArrayDeque<>(List.of(cardLearnMode, cardReviewMode1, cardReviewMode2));
-
-        given(mockedWordFlashcardService.fetchAllReadyForViewByDeck(deckId, timezoneId, limit, ))
-                .willReturn(learnCardFirstDeque);
-
-        // when
-        mockMvc.perform(get("/review")
-                        .param("deck", String.valueOf(deckId))
-                        .param("timezone", timezoneId))
+        // when, then
+        MvcResult mvcResult = mockMvc.perform(post(baseUrl + "/rating")
+                        .content(json.writeValueAsString(body))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(csrf())
+                )
                 .andExpect(status().isOk())
-                .andExpect(view().name("learn"))
-                .andExpect(model().attribute("currentCard",
-                        hasProperty("id", equalTo(7L))))
-                .andExpect(model().attribute("reviewCards", hasSize(3)))
-                .andExpect(model().attribute("reviewCards", allOf(
-                        hasItem(equalTo(cardLearnMode)),
-                        hasItem(equalTo(cardReviewMode1)),
-                        hasItem(equalTo(cardReviewMode2))))
-                );
+                .andReturn();
 
         // then
-        then(mockedWordFlashcardService)
+        then(mockedSpacedRepetitionService)
                 .should(times(1))
-                .fetchAllReadyForViewByDeck(deckId, timezoneId, limit, );
+                .applyRating(body.cardId(), body.rating());
+        assertEquals(expectedResponse, json.readValue(mvcResult.getResponse().getContentAsString(), FlashcardRatingResponse.class));
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void getReadyForViewCardsByDeck_ShouldDisplayReviewPage_WhenTheFirstReadyForReviewCardIsInReviewMode() throws Exception {
-        // given
-        long deckId = 23L;
-        String timezoneId = "America/Los_Angeles";
-        int limit = 10;
-        Deck testDeck = new Deck(34L, "test deck", null,
-                LanguageCode.SPANISH, LanguageCode.BULGARIAN, new ArrayList<>());
-        WordFlashcard cardLearnMode = WordFlashcard.inInitialLearnMode()
-                .withTranslatedWord("learn front 1")
-                .withTargetWord("learn back 1")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.ENGLISH)
-                .withTargetLang(LanguageCode.SPANISH).build();
-        cardLearnMode.setId(7L);
-        WordFlashcard cardReviewMode1 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("review front 1")
-                .withTargetWord("review back 1")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.GERMAN).build();
-        cardReviewMode1.setId(36L);
-        WordFlashcard cardReviewMode2 = WordFlashcard.inInitialReviewMode()
-                .withTranslatedWord("review front 2")
-                .withTargetWord("review back 2")
-                .withDeck(testDeck)
-                .withSourceLang(LanguageCode.SPANISH)
-                .withTargetLang(LanguageCode.ENGLISH).build();
-        testDeck.getFlashcards().add(cardLearnMode);
-        testDeck.getFlashcards().add(cardReviewMode1);
-        testDeck.getFlashcards().add(cardReviewMode2);
 
-        LocalDateTime lastReview = LocalDateTime
-                .of(2023, 3, 14, 16, 37, 21);
-        cardReviewMode2.setLastReviewInUTC(lastReview);
-        cardReviewMode2.setCurrentIntervalDays(11.6);
-        cardReviewMode2.setNextReviewInUTC(lastReview.plusDays(12));
-        cardReviewMode2.setNextReviewWithoutTimeInUTC(lastReview.plusDays(12).toLocalDate());
-        cardReviewMode2.setId(86L);
-        Deque<WordFlashcard> reviewCardFirstDeque = new ArrayDeque<>(List.of(cardReviewMode2, cardLearnMode, cardReviewMode1));
-
-        given(mockedWordFlashcardService.fetchAllReadyForViewByDeck(deckId, timezoneId, limit, ))
-                .willReturn(reviewCardFirstDeque);
-
-        // when
-        mockMvc.perform(get("/review")
-                        .param("deck", String.valueOf(deckId))
-                        .param("timezone", timezoneId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("review"))
-                .andExpect(model().attribute("currentCard",
-                        hasProperty("id", equalTo(86L))
-                ))
-                .andExpect(model().attribute("reviewCards", hasSize(3)))
-                .andExpect(model().attribute("reviewCards", allOf(
-                        hasItem(equalTo(cardLearnMode)),
-                        hasItem(equalTo(cardReviewMode1)),
-                        hasItem(equalTo(cardReviewMode2)))
-                ));
-
-        // then
-        then(mockedWordFlashcardService)
-                .should(times(1))
-                .fetchAllReadyForViewByDeck(deckId, timezoneId, limit, );
+    static Stream<Arguments> invalidQueryParams() {
+        return Stream.of(
+                Arguments.of(0, 5, "interval", "desc"),
+                Arguments.of(-1, 5, "interval", "desc"),
+                Arguments.of(1, 2, "interval", "desc"),
+                Arguments.of(1, 5, "abc", "desc"),
+                Arguments.of(1, 5, "interval", "abc")
+        );
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void reviewNextCard_ShouldDisplayLearnPage_WhenTheTopReadyForReviewCardIsInLearnMode() throws Exception {
-        // given
-        Deque<WordFlashcard> readyForReviewCardsDeque = threeElementFlashcardArrayDequeFirstInLearnMode();
-
-        // when
-        mockMvc.perform(get("/review/next")
-                        .flashAttr("reviewCards", readyForReviewCardsDeque))
-        // then
-                .andExpect(view().name("learn"))
-                .andExpect(model().attribute("reviewCards", readyForReviewCardsDeque))
-                .andExpect(model().attribute("currentCard", readyForReviewCardsDeque.element()))
-                .andExpect(model().attribute("rating", instanceOf(FlashcardRatingRequest.class)));
+    static Stream<Arguments> validQueryParams() {
+        return Stream.of(
+                Arguments.of(1, 3, "view", "asc"),
+                Arguments.of(99, 3, "view", "asc"),
+                Arguments.of(99, 25, "view", "asc"),
+                Arguments.of(1, 3, "created", "asc"),
+                Arguments.of(1, 3, "interval", "asc"),
+                Arguments.of(1, 3, "view", "desc")
+        );
     }
 
-    @WithMockUser(username = "username")
-    @Test
-    void reviewNextCard_ShouldDisplayReviewPage_WhenTheTopReadyForReviewCardIsInReviewMode() throws Exception {
-        // given
-        Deque<WordFlashcard> readyForReviewCardsDeque = threeElementFlashcardArrayDequeFirstInReviewMode();
-
-        // when
-        mockMvc.perform(get("/review/next")
-                        .flashAttr("reviewCards", readyForReviewCardsDeque))
-        // then
-                .andExpect(view().name("review"))
-                .andExpect(model().attribute("reviewCards", readyForReviewCardsDeque))
-                .andExpect(model().attribute("currentCard", readyForReviewCardsDeque.element()))
-                .andExpect(model().attribute("rating", instanceOf(FlashcardRatingRequest.class)));
-    }
-
-    @WithMockUser(username = "username")
-    @Test
-    void reviewNextCard_ShouldRedirectToMainDecksPage_WhenReadyForReviewCardsDequeIsEmpty() throws Exception {
-        // given
-        Deque<WordFlashcard> readyForReviewCardsDeque = new ArrayDeque<>();
-
-        // when
-        mockMvc.perform(get("/review/next")
-                        .flashAttr("reviewCards", readyForReviewCardsDeque))
-                .andExpect(redirectedUrl("/decks"));
+    static Stream<FlashcardRatingRequest> invalidFlashcardRatingRequests() {
+        return Stream.of(
+                new FlashcardRatingRequest(0, RatingType.REVIEW_PARTIALLY),
+                new FlashcardRatingRequest(-1, RatingType.LEARN_KNOW),
+                new FlashcardRatingRequest(5, null)
+        );
     }
 }
