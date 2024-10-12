@@ -1,7 +1,7 @@
 "use strict";
 
-import { callApiExpectNoBody } from "./modules/client.js";
-import { LOGGED_IN_SKEY, logoutParam } from "./modules/constants.js";
+import { callApiExpectNoBody, getCsrfToken } from "./modules/client.js";
+import { LOGGED_IN_SKEY, logoutParam, CSRF_HEADER_NAME } from "./modules/constants.js";
 
 const menuBtn = document.getElementById("menu-btn");
 menuBtn.addEventListener("click", () => {
@@ -58,9 +58,12 @@ dropdownBtns.forEach((el) => {
 
 const logoutBtns = document.querySelectorAll(".logout-btn");
 logoutBtns.forEach(el => {
-  el.addEventListener("click", () => {
+  el.addEventListener("click", async () => {
     callApiExpectNoBody("/auth/logout", {
-      method: "POST"
+      method: "POST",
+      headers: {
+        [CSRF_HEADER_NAME]: await getCsrfToken(),
+      }
     });
     sessionStorage.setItem(LOGGED_IN_SKEY, "false");
     window.location.replace(`/login?${logoutParam}`);

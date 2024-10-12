@@ -1,4 +1,5 @@
-import { USER_SETTINGS_SKEY } from "./constants.js";
+import { USER_SETTINGS_SKEY, CSRF_HEADER_NAME } from "./constants.js";
+import { getCookieValue } from "./utils.js";
 
 /**
  * Prefix to the LangControl server REST API.
@@ -17,6 +18,7 @@ async function callApi(url, options) {
   if (options === undefined) {
     response = await fetch(`${apiPref}${url}`);
   } else {
+    options = await setCsrfHeader(options);
     response = await fetch(`${apiPref}${url}`, options);
   }
   if (!response.ok) {
@@ -40,6 +42,7 @@ async function callApiExpectNoBody(url, options) {
   if (options === undefined) {
     response = await fetch(`${apiPref}${url}`);
   } else {
+    options = await setCsrfHeader(options);
     response = await fetch(`${apiPref}${url}`, options);
   }
   if (!response.ok) {
@@ -144,4 +147,30 @@ async function getUserSettings() {
   return resBody;
 }
 
-export { callApi, generateSentences, translateText, lookupDictionary, callApiExpectNoBody, getUserSettings };
+async function getCsrfToken() {
+  let token = getCookieValue("XSRF-TOKEN");
+  if (token) {
+    return token;
+  }
+  await fetch(apiPref, {
+    method: "POST"
+  });
+  token = getCookieValue("XSRF-TOKEN");
+  console.debug("Token: " + token);
+  return token;
+}
+
+async function setCsrfHeader(options) {
+  console.debug("Options before: " + JSON.stringify(options));
+  if (["POST", "PUT", "DELETE"].includes(options.method)) {
+    if (options.headers) {
+      options.headers[CSRF_HEADER_NAME] = await getCsrfToken();
+    } else {
+      options.headers = { [CSRF_HEADER_NAME]: await getCsrfToken() };
+    }
+  }
+  console.debug("Options after: " + JSON.stringify(options));
+  return options;
+}
+
+export { callApi, callApiExpectNoBody, generateSentences, translateText, lookupDictionary, getUserSettings, getCsrfToken };

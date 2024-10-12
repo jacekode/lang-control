@@ -20,4 +20,21 @@ function getSelectedOption(selectId) {
   return select.options[select.selectedIndex];
 }
 
-export { formDataToJson, getSelectedOption };
+/**
+ * Returns the value of the cookie with the given name.
+ * 
+ * @param {string} name the name of the cookie
+ * @returns {string} the value of the cookie
+ */
+function getCookieValue(name) {
+  const cookies = document.cookie.split("; ");
+  for (const cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.split("=");
+    if (cookieName === name) {
+      return decodeURIComponent(cookieValue);
+    }
+  }
+  return null;
+}
+
+export { formDataToJson, getSelectedOption, getCookieValue };

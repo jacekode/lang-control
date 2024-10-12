@@ -1,6 +1,7 @@
 "use strict";
 
-import { LOGGED_IN_SKEY } from "./modules/constants.js";
+import { LOGGED_IN_SKEY, CSRF_HEADER_NAME } from "./modules/constants.js";
+import { getCsrfToken } from "./modules/client.js";
 
 const queryParams = new URLSearchParams(window.location.search);
 if (queryParams.has("logout")) {
@@ -11,15 +12,18 @@ if (queryParams.has("logout")) {
 
 const loginForm = document.querySelector("#login-form");
 
-loginForm.addEventListener("submit", (e) => {
+loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const reqBody = new URLSearchParams(new FormData(loginForm));
+  const csrfToken = await getCsrfToken();
   // console.debug(`Request body: ${reqBody}`);
+  // console.debug("Csrf token: " + csrfToken)
   fetch(`/api/auth/login`, {
     method: "POST",
     body: reqBody,
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
+      [CSRF_HEADER_NAME]: csrfToken,
     }
   })
     .then((response) => {

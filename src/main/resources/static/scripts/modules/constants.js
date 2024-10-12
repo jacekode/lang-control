@@ -36,4 +36,9 @@ const LOGGED_IN_SKEY = "loggedIn";
  */
 const USER_SETTINGS_SKEY = "userSettings";
 
-export { rsErrorParam, rsCompletedParam, logoutParam, accountDelParam, errorParam, RC_SKEY, RR_SKEY, LOGGED_IN_SKEY, USER_SETTINGS_SKEY };
+/**
+ * Name of the request header for sending the CSRF token.
+ */
+const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
+
+export { rsErrorParam, rsCompletedParam, logoutParam, accountDelParam, errorParam, RC_SKEY, RR_SKEY, LOGGED_IN_SKEY, USER_SETTINGS_SKEY, CSRF_HEADER_NAME };

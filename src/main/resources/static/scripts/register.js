@@ -1,18 +1,23 @@
 "use strict";
 
 import { formDataToJson } from "./modules/utils.js";
+import { getCsrfToken } from "./modules/client.js";
+import { CSRF_HEADER_NAME } from "./modules/constants.js";
+
 
 const registerForm = document.querySelector("#register-form");
 
-registerForm.addEventListener("submit", (e) => {
+registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const reqBody = formDataToJson(registerForm);
+  const csrfToken = await getCsrfToken();
   // console.debug(`Request body: ${reqBody}`);
   fetch(`/api/auth/register`, {
     method: "POST",
     body: reqBody,
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      [CSRF_HEADER_NAME]: csrfToken,
     },
   })
     .then((response) => {
