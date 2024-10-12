@@ -1,6 +1,0 @@
-package langcontrol.app.spaced_repetition;
-
-public enum RatingType {
-    LEARN_PREVIOUS, LEARN_NORMAL, LEARN_NEXT, LEARN_TO_REVIEW_MODE,
-    REVIEW_CANNOT_SOLVE, REVIEW_DIFFICULT, REVIEW_NORMAL, REVIEW_EASY
-}

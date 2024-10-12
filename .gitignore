@@ -32,7 +32,16 @@ build/
 ### VS Code ###
 .vscode/
 
-# IntelliJ
+# IntelliJ, plugins
 out/
-
 .jpb
+
+# JWT keys
+**/certs
+*.pem
+
+# Temporarily ignore the JWT auth-related files
+**/jwtauth
+**/TokenService.java
+
+**/admin/

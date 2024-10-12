@@ -23,7 +23,7 @@
               
               <div class="mb-3">
                 <label for="source-lang-select" class="form-label">Your native language: </label>
-                <select id="source-lang-select" class="form-select" name="sourceLanguage" th:field="*{sourceLanguage}" required>
+                <select id="source-lang-select" class="form-select" name="sourceLang" th:field="*{sourceLang}" required>
                   <option th:each="lang : ${languageCodes}" th:value="${lang.code}" th:text="${lang.fullLanguageName}">
                     English
                   </option>
@@ -32,7 +32,7 @@
 
               <div class="mb-4">
                 <label for="target-lang-select" class="form-label">The language you're learning: </label>
-                <select id="target-lang-select" class="form-select" name="targetLanguage" th:field="*{targetLanguage}" required>
+                <select id="target-lang-select" class="form-select" name="targetLang" th:field="*{targetLang}" required>
                   <option th:each="lang : ${languageCodes}" th:value="${lang.code}" th:text="${lang.fullLanguageName}">
                     German
                   </option>
@@ -50,6 +50,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" 
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script th:src="@{/js/add-deck.js}" src="/static/js/add-deck.js"></script>
+    <script th:src="@{/js/add-deck.js}" src="/static/scripts/add-deck.js"></script>
   </body>
 </html>
