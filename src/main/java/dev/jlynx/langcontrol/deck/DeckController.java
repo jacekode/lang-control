@@ -7,7 +7,6 @@ import dev.jlynx.langcontrol.deck.dto.UpdateDeckRequest;
 import dev.jlynx.langcontrol.deck.view.DeckView;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import dev.jlynx.langcontrol.flashcard.WordFlashcardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

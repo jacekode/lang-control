@@ -43,5 +43,3 @@ out/
 # Temporarily ignore the JWT auth-related files
 **/jwtauth
 **/TokenService.java
-
-**/admin/

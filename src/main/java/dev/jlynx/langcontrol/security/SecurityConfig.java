@@ -49,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/register").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers("/styles/**", "/scripts/**", "/*.html", "/icons/**", "/*.svg").permitAll()
-                        .requestMatchers("/admintools/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/admin/**", "/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login

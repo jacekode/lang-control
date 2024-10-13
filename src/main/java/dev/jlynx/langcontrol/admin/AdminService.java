@@ -1,12 +1,17 @@
 package dev.jlynx.langcontrol.admin;
 
+import dev.jlynx.langcontrol.admin.dto.UpdateUserRequest;
+import dev.jlynx.langcontrol.admin.dto.UserOverview;
+
 import java.util.List;
 
 public interface AdminService {
 
-    List<UserOverviewDTO> getAllUsers();
+    List<UserOverview> getAllUsers();
 
-    void editUser(long accountId, EditUserDTO dto);
+    UserOverview getUserById(long accountId);
 
-    void deleteUser(long accountId);
+    void updateUser(long accountId, UpdateUserRequest body);
+
+    void deleteAccount(long accountId);
 }

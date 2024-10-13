@@ -1,58 +1,52 @@
 package dev.jlynx.langcontrol.admin;
 
+import dev.jlynx.langcontrol.admin.dto.UpdateUserRequest;
+import dev.jlynx.langcontrol.admin.dto.UserOverview;
 import jakarta.validation.Valid;
-import dev.jlynx.langcontrol.account.Account;
-import dev.jlynx.langcontrol.account.AccountRepository;
-import dev.jlynx.langcontrol.exception.AssetNotFoundException;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @Validated
-@RequestMapping("/admintools")
-@Controller
+@RequestMapping("${apiPref}/admin")
+@RestController
 public class AdminController {
 
     private final AdminService adminService;
-    private final AccountRepository accountRepository;
 
     @Autowired
-    public AdminController(AdminService adminService, AccountRepository accountRepository) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.accountRepository = accountRepository;
     }
 
     @GetMapping("/users")
-    public String showAllUsersPage(Model model) {
-        List<UserOverviewDTO> allUsers = adminService.getAllUsers();
-        model.addAttribute("users", allUsers);
-        return "all-users";
+    public ResponseEntity<List<UserOverview>> getAllUsers() {
+        List<UserOverview> users = adminService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/users/{id}/edit")
-    public String showEditUserPage(@PathVariable("id") long accountId,
-                                   Model model) {
-        Account foundAccount = accountRepository.findById(accountId)
-                .orElseThrow(AssetNotFoundException::new);
-        EditUserDTO editUserDTO = new EditUserDTO(foundAccount, foundAccount.getUserProfile());
-        model.addAttribute("userToEdit", editUserDTO);
-        return "edit-user";
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserOverview> getUserById(@Min(1) @PathVariable("id") long accountId) {
+        UserOverview userOverview = adminService.getUserById(accountId);
+        return ResponseEntity.ok(userOverview);
     }
 
-    @PostMapping("/users/{id}/edit")
-    public String handleEditUserRequest(@PathVariable("id") long accountId,
-                                        @Valid @ModelAttribute("userToEdit") EditUserDTO editUserDTO) {
-        adminService.editUser(accountId, editUserDTO);
-        return "redirect:/admintools/users";
+    @PutMapping("/users/{id}")
+    public ResponseEntity<Void> updateUser(
+            @Min(1) @PathVariable("id") long accountId,
+            @RequestBody @Valid UpdateUserRequest body
+    ) {
+        adminService.updateUser(accountId, body);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/users/{id}/delete")
-    public String handleDeleteUserRequest(@PathVariable("id") long accountId) {
-        adminService.deleteUser(accountId);
-        return "redirect:/admintools/users";
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUserAccount(@Min(1) @PathVariable("id") long accountId) {
+        adminService.deleteAccount(accountId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

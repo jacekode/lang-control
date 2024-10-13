@@ -2,15 +2,15 @@ package dev.jlynx.langcontrol.admin;
 
 import dev.jlynx.langcontrol.account.Account;
 import dev.jlynx.langcontrol.account.AccountRepository;
+import dev.jlynx.langcontrol.admin.dto.UpdateUserRequest;
+import dev.jlynx.langcontrol.admin.dto.UserOverview;
 import dev.jlynx.langcontrol.exception.AssetNotFoundException;
-import dev.jlynx.langcontrol.role.DefinedRoleValue;
 import dev.jlynx.langcontrol.userprofile.UserProfile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -22,40 +22,43 @@ public class AdminServiceImpl implements AdminService {
         this.accountRepository = accountRepository;
     }
 
-    // todo: remove the stream filtering and add findByRole method to AccountRepository
-    @Transactional
     @Override
-    public List<UserOverviewDTO> getAllUsers() {
-        List<Account> allAccounts = accountRepository.findAll();
+    public List<UserOverview> getAllUsers() {
+        List<Account> accounts = accountRepository.findAll();
 
-        List<UserOverviewDTO> dtoList = allAccounts.stream()
-                .filter(account -> account.getRoles().stream()
-                        .noneMatch(r -> Objects.equals(r.getValue(), DefinedRoleValue.ADMIN.getValue())))
+        return accounts.stream()
                 .map(account -> {
                     UserProfile profile = account.getUserProfile();
-                    return new UserOverviewDTO(account, profile);
+                    return new UserOverview(account, profile);
                 })
                 .toList();
-        return dtoList;
+    }
+
+    @Override
+    public UserOverview getUserById(long accountId) {
+        Account account = accountRepository.findById(accountId).orElseThrow(AssetNotFoundException::new);
+        UserProfile profile = account.getUserProfile();
+        return new UserOverview(account, profile);
     }
 
     @Transactional
     @Override
-    public void editUser(long accountId, EditUserDTO dto) {
-        Account accountToEdit = accountRepository.findById(accountId)
+    public void updateUser(long accountId, UpdateUserRequest body) {
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(AssetNotFoundException::new);
-        UserProfile profileToEdit = accountToEdit.getUserProfile();
-        accountToEdit.setUsername(dto.getUsername());
-        accountToEdit.setEnabled(dto.isEnabled());
-        profileToEdit.setFirstName(dto.getName());
+        UserProfile profile = account.getUserProfile();
+        account.setUsername(body.username());
+        profile.setFirstName(body.firstName());
+        account.setEnabled(body.enabled());
+        account.setAccountNonLocked(body.nonLocked());
     }
 
     @Transactional
     @Override
-    public void deleteUser(long accountId) {
+    public void deleteAccount(long accountId) {
         Account accountToDelete = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AssetNotFoundException(
-                        "Account with id=" + accountId + "couldn't be found."));
-        accountRepository.delete(accountToDelete);
+                        "Account with id=" + accountId + " couldn't be found."));
+        accountRepository.deleteById(accountId);
     }
 }
