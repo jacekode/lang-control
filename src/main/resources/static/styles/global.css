@@ -314,17 +314,39 @@ header {
 }
 
 #logo {
-  position: absolute;
-  top: var(--nav-top-margin);
+  position: fixed;
+  top: 1.1rem;
   left: var(--nav-side-margin);
+}
+
+#logo img {
+  width: 2.8rem;
+  height: 2.8rem;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 #brand-name {
   position: absolute;
   top: var(--nav-top-margin);
-  left: 5.93rem;
-  font-size: 1.3rem;
+  left: 4.4rem;
+  font-size: 1.4rem;
   font-weight: 300;
+  text-decoration: none;
+  color: black;
+  transition: .6s ease;
+}
+
+#brand-name a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+#brand-name:hover {
+  color: var(--primary-clr);
 }
 
 #menu-btn {
@@ -388,14 +410,14 @@ header {
 #nav-links {
   position: fixed;
   z-index: 99;
-  top: -100%;
+  top: -150%;
   bottom: 100%;
   left: 0;
   width: 100%;
   background-color: white;
   font-size: 1.7rem;
   transition: bottom .4s ease,
-    top .9s ease,
+    top 1.2s ease,
     background-color .8s ease,
     color .8s ease;
 }
@@ -440,10 +462,19 @@ nav a {
   margin-right: .2em;
 }
 
-@media (min-width: 768px) {
+@media (min-width: calc(768px + 50px)) {
   header {
     background-color: transparent;
     position: absolute;
+  }
+
+  #logo {
+    top: 1.8rem;
+    transition: .6s ease;
+  }
+
+  #brand-name {
+    top: calc(var(--nav-top-margin) + .7rem);
   }
 
   #menu-btn {
