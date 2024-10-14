@@ -60,7 +60,7 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
                 }
                 case TWO -> {
                     if (rating == RatingType.LEARN_KNOW) {
-                        return Flashcard.INITIAL_REVIEW_INTERVAL;
+                        return INITIAL_REVIEW_INTERVAL;
                     }
                     if (rating == RatingType.LEARN_DONT_KNOW) {
                         return Duration
@@ -74,10 +74,10 @@ public class BasicSpacedRepetitionAlgorithm implements SpacedRepetitionAlgorithm
                 return (long) (card.getCurrentInterval() * card.getIFactor());
             }
             if (rating == RatingType.REVIEW_PARTIALLY) {
-                return (long) (card.getCurrentInterval() * card.getRFactor());
+                return (long) (card.getCurrentInterval() * 0.5);
             }
             if (rating == RatingType.REVIEW_FORGOT) {
-                return Flashcard.INITIAL_REVIEW_INTERVAL;
+                return (long) (card.getCurrentInterval() * card.getRFactor());
             }
         }
         return null;
