@@ -749,19 +749,19 @@ button[type="submit"] {
   margin: auto;
 }
 
-/* || Settings styling */
-#acc-settings-form {
+/* || Edit account / account settings styling */
+.acc-edit-form {
   max-width: 25rem;
 }
 
-#acc-settings-form form {
+.acc-edit-form form {
   border: 1px solid var(--neutral-medium-clr);
   border-radius: var(--radius-bg);
   padding: 10px 8px;
 }
 
 @media (min-width: 768px) {
-  #acc-settings-form form {
+  .acc-edit-form form {
     padding-inline: 15px;
   }
 }
@@ -930,4 +930,26 @@ caption {
   font-weight: 300;
   font-size: 1rem;
   letter-spacing: 1px;
+}
+
+
+/* || Admin tools styling */
+.admin-table {
+  border-color: var(--warning-clr);
+}
+
+.admin-table thead {
+  background-color: var(--warning-clr);
+}
+
+.admin-table :is(th ,td) {
+  width: 1%;
+}
+
+.admin-form {
+  border-color: var(--warning-clr);
+}
+
+.admin-form input {
+  border-color: var(--warning-clr);
 }

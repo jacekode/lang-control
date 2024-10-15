@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LangControl</title>
 
-  <script type="module" src="/scripts/review.js"></script>
-  <!-- <script src="./temp.js"></script> -->
+  <script type="module" src="/scripts/admin-user-edit.js"></script>
   <script type="module" src="/scripts/global.js"></script>
   <link rel="stylesheet" type="text/css" href="/styles/global.css">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
@@ -54,53 +53,52 @@
 
   <main>
 
-    <div class="centered-content">
-
-      <div id="review-container">
-        <div id="review-header">
-          <p class="header-item"><span class="header-label">Deck</span><span id="deck-name">...</span></p>
-          <p class="header-item"><span class="header-label">Remaining</span><span id="remaining-counter">...</span></p>
-          <p class="header-item"><span class="header-label">Session</span><span id="session-counter">...</span></p>
+    <div class="form-container acc-edit-form admin-form">
+      <form id="admin-update-account-profile-form">
+        <h2>Edit this account</h2>
+        <p id="feedback-msg-acc"></p>
+        <div>
+          <label for="username">Set username:</label>
+          <input type="text" name="username" id="username" class="acc-editable" required minlength="4" maxlength="30" placeholder="Username">
         </div>
-        <div id="review-body">
-          <p id="card-front">...</p>
-          <div class="divider"></div>
-          <p id="card-back">...</p>
-          <div id="example">
-            <p>Example:</p>
-            <p id="target-example">...</p>
-            <p id="translated-example">...</p>
-          </div>
+        <div>
+          <label for="fname">Set first name:</label>
+          <input type="text" name="firstName" id="fname" class="acc-editable" required maxlength="50" placeholder="First name">
         </div>
-        <div id="review-footer">
-          <button id="answer-btn" class="btn-primary">Show answer</button>
-          <div id="learn-mode-ratings">
-            <button id="dknow-btn" class="btn-rating" data-url-value="dknow">
-              <div>Don't know</div>
-              <div id="dknow-forecast">...</div>
-            </button>
-            <button id="know-btn" class="btn-rating" data-url-value="know">
-              <div>Know</div>
-              <div id="know-forecast">...</div>
-            </button>
-          </div>
-          <div id="review-mode-ratings">
-            <button id="for-btn" class="btn-rating" data-url-value="forgot">
-              <div>Forgot</div>
-              <div id="for-forecast">...</div>
-            </button>
-            <button id="par-btn" class="btn-rating" data-url-value="partially">
-              <div>Partially</div>
-              <div id="par-forecast">...</div>
-            </button>
-            <button id="rem-btn" class="btn-rating" data-url-value="remember">
-              <div>Remember</div>
-              <div id="rem-forecast">...</div>
-            </button>
-          </div>
+        <div>
+          <input type="checkbox" value="true" name="enabled" id="enabled" class="acc-editable">
+          <label for="enabled">Account enabled</label>
         </div>
-      </div>
-      
+        <div>
+          <input type="checkbox" value="true" name="nonLocked" id="non-locked" class="acc-editable">
+          <label for="nonLocked">Account not locked</label>
+        </div>
+        <button type="submit" class="btn-primary" disabled>Save</button>
+      </form>
+      <div class="divider"></div>
+      <form id="admin-update-pwd-form">
+        <h2>Overwrite password</h2>
+        <p id="feedback-msg-pwd"></p>
+        <div>
+          <label for="cur-pwd">Your admin password:</label>
+          <input type="password" name="adminPassword" id="cur-pwd" required maxlength="50" placeholder="Admin password">
+        </div>
+        <div>
+          <label for="new-pwd">Set new password for this account:</label>
+          <input type="password" name="newPassword" id="new-pwd" required minlength="8" maxlength="50" placeholder="New password">
+        </div>
+        <button type="submit" class="btn-primary" disabled>Save</button>
+      </form>
+      <div class="divider"></div>
+      <form id="admin-delete-account-form">
+        <h2 class="text-danger">Delete account</h2>
+        <p id="feedback-msg-delete"></p>
+        <div>
+          <label for="delete-pwd">Enter your admin password:</label>
+          <input type="password" name="adminPassword" id="delete-pwd" required maxlength="50" placeholder="Admin password">
+        </div>
+        <button type="submit" class="btn-danger" disabled>Delete</button>
+      </form>
     </div>
 
   </main>

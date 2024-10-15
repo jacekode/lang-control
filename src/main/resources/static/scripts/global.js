@@ -1,7 +1,7 @@
 "use strict";
 
-import { callApiExpectNoBody, getCsrfToken } from "./modules/client.js";
-import { LOGGED_IN_SKEY, logoutParam, CSRF_HEADER_NAME } from "./modules/constants.js";
+import { callApiExpectNoBody, getCsrfToken, getCurrentAccount } from "./modules/client.js";
+import { LOGGED_IN_SKEY, logoutParam, CSRF_HEADER_NAME, CURRENT_ACCOUNT_SKEY, USER_SETTINGS_SKEY } from "./modules/constants.js";
 
 const menuBtn = document.getElementById("menu-btn");
 menuBtn.addEventListener("click", () => {
@@ -66,6 +66,8 @@ logoutBtns.forEach(el => {
       }
     });
     sessionStorage.setItem(LOGGED_IN_SKEY, "false");
+    sessionStorage.removeItem(CURRENT_ACCOUNT_SKEY);
+    sessionStorage.removeItem(USER_SETTINGS_SKEY);
     window.location.replace(`/login?${logoutParam}`);
   });
 });
@@ -82,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     authNavlinks.forEach(elem => {
       elem.style.display = "block";
     });
+    showHideAdminElements();
   } else {
     anonNavlinks.forEach(elem => {
       elem.style.display = "block";
@@ -107,3 +110,19 @@ desktopMediaMatch.addEventListener("change", (e) => {
     accountMenu.style.display = "none";
   }
 });
+
+async function showHideAdminElements() {
+  const adminNavlinks = document.querySelectorAll(".admin-navlink");
+  const curAcc = await getCurrentAccount();
+  console.debug(`Current account: ${JSON.stringify(curAcc)}`);
+  if (curAcc.roles.includes("ROLE_ADMIN")) {
+    for (const elem of adminNavlinks) {
+      elem.style.display = "block";
+    }
+  } else {
+    for (const elem of adminNavlinks) {
+      elem.style.display = "none";
+
+    }
+  }
+}

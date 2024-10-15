@@ -34,6 +34,8 @@ public class WebConfig {
                 registry.addViewController("/cards/*/edit").setViewName("forward:/edit-card.html");
                 registry.addViewController("/settings/app").setViewName("forward:/settings-app.html");
                 registry.addViewController("/settings/account").setViewName("forward:/settings-account.html");
+                registry.addViewController("/admin").setViewName("forward:/admin-users.html");
+                registry.addViewController("/admin/users/*/edit").setViewName("forward:/admin-user-edit.html");
             }
         };
     }

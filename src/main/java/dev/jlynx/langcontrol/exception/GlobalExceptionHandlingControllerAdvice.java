@@ -99,4 +99,13 @@ public class GlobalExceptionHandlingControllerAdvice {
         return new ErrorResponseBody(HttpStatus.BAD_REQUEST, req.getRequestURI(), ex,
                 "Deepl API responded with error status code");
     }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponseBody handleWrongPasswordException(WrongPasswordException ex,
+                                                          HttpServletRequest req) {
+        return new ErrorResponseBody(HttpStatus.BAD_REQUEST, req.getRequestURI(), ex,
+                "Invalid credentials have been provided.");
+
+    }
 }

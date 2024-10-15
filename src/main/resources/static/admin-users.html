@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LangControl</title>
 
-  <script type="module" src="/scripts/review.js"></script>
-  <!-- <script src="./temp.js"></script> -->
+  <script type="module" src="/scripts/admin-users.js"></script>
   <script type="module" src="/scripts/global.js"></script>
   <link rel="stylesheet" type="text/css" href="/styles/global.css">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
@@ -54,54 +53,50 @@
 
   <main>
 
-    <div class="centered-content">
-
-      <div id="review-container">
-        <div id="review-header">
-          <p class="header-item"><span class="header-label">Deck</span><span id="deck-name">...</span></p>
-          <p class="header-item"><span class="header-label">Remaining</span><span id="remaining-counter">...</span></p>
-          <p class="header-item"><span class="header-label">Session</span><span id="session-counter">...</span></p>
-        </div>
-        <div id="review-body">
-          <p id="card-front">...</p>
-          <div class="divider"></div>
-          <p id="card-back">...</p>
-          <div id="example">
-            <p>Example:</p>
-            <p id="target-example">...</p>
-            <p id="translated-example">...</p>
-          </div>
-        </div>
-        <div id="review-footer">
-          <button id="answer-btn" class="btn-primary">Show answer</button>
-          <div id="learn-mode-ratings">
-            <button id="dknow-btn" class="btn-rating" data-url-value="dknow">
-              <div>Don't know</div>
-              <div id="dknow-forecast">...</div>
-            </button>
-            <button id="know-btn" class="btn-rating" data-url-value="know">
-              <div>Know</div>
-              <div id="know-forecast">...</div>
-            </button>
-          </div>
-          <div id="review-mode-ratings">
-            <button id="for-btn" class="btn-rating" data-url-value="forgot">
-              <div>Forgot</div>
-              <div id="for-forecast">...</div>
-            </button>
-            <button id="par-btn" class="btn-rating" data-url-value="partially">
-              <div>Partially</div>
-              <div id="par-forecast">...</div>
-            </button>
-            <button id="rem-btn" class="btn-rating" data-url-value="remember">
-              <div>Remember</div>
-              <div id="rem-forecast">...</div>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-    </div>
+    <h2 class="page-subtitle">Admin panel</h2>
+    <table class="admin-table" id="users-table">
+      <caption>Registered accounts</caption>
+      <thead>
+        <tr>
+          <th scope="col">Id</th>
+          <th scope="col">Username</th>
+          <th scope="col">First name</th>
+          <th scope="col">Enabled</th>
+          <th scope="col">Locked</th>
+          <th scope="col">Is admin?</th>
+          <th scope="col">Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+        </tr>
+        <tr>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+        </tr>
+        <tr>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+          <td>Dummy</td>
+        </tr>
+      </tbody>
+    </table>
 
   </main>
 

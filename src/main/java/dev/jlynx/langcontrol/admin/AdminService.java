@@ -1,8 +1,9 @@
 package dev.jlynx.langcontrol.admin;
 
+import dev.jlynx.langcontrol.admin.dto.DeleteAccountAdminRequest;
+import dev.jlynx.langcontrol.admin.dto.UpdatePasswordAdminRequest;
 import dev.jlynx.langcontrol.admin.dto.UpdateUserRequest;
 import dev.jlynx.langcontrol.admin.dto.UserOverview;
-
 import java.util.List;
 
 public interface AdminService {
@@ -13,5 +14,7 @@ public interface AdminService {
 
     void updateUser(long accountId, UpdateUserRequest body);
 
-    void deleteAccount(long accountId);
+    void overwriteUserPassword(long accountId, UpdatePasswordAdminRequest body);
+
+    void deleteAccount(long accountId, DeleteAccountAdminRequest body);
 }

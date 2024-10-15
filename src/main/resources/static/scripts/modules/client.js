@@ -1,4 +1,4 @@
-import { USER_SETTINGS_SKEY, CSRF_HEADER_NAME } from "./constants.js";
+import { USER_SETTINGS_SKEY, CURRENT_ACCOUNT_SKEY, CSRF_HEADER_NAME } from "./constants.js";
 import { getCookieValue } from "./utils.js";
 
 /**
@@ -147,6 +147,27 @@ async function getUserSettings() {
   return resBody;
 }
 
+/**
+ * Calls the LangControl API to fetch the current logged in account metadata.
+ * 
+ * @returns a logged in account metadata object
+ */
+async function getCurrentAccount() {
+  if (sessionStorage.getItem(CURRENT_ACCOUNT_SKEY)) {
+    return JSON.parse(sessionStorage.getItem(CURRENT_ACCOUNT_SKEY));
+  }
+
+  const url = "/account";
+  let resBody;
+  try {
+    resBody = await callApi(url);
+    sessionStorage.setItem(CURRENT_ACCOUNT_SKEY, JSON.stringify(resBody));
+  } catch (err) {
+    console.error(err);
+  }
+  return resBody;
+}
+
 async function getCsrfToken() {
   let token = getCookieValue("XSRF-TOKEN");
   if (token) {
@@ -173,4 +194,4 @@ async function setCsrfHeader(options) {
   return options;
 }
 
-export { callApi, callApiExpectNoBody, generateSentences, translateText, lookupDictionary, getUserSettings, getCsrfToken };
+export { callApi, callApiExpectNoBody, generateSentences, translateText, lookupDictionary, getUserSettings, getCurrentAccount, getCsrfToken };
