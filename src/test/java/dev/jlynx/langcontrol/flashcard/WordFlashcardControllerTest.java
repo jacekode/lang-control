@@ -143,7 +143,25 @@ class WordFlashcardControllerTest {
                 "This is an example sentence.",
                 deckId
         );
-        return Stream.of(body1, body2);
+        var body3 = new CreateWordFlashcardRequest(
+                "translation",
+                "target",
+                PartOfSpeech.NOUN,
+                true,
+                null,
+                "This is an example sentence.",
+                14L
+        );
+        var body4 = new CreateWordFlashcardRequest(
+                "translation",
+                "target",
+                PartOfSpeech.NOUN,
+                true,
+                "This is a translated example.",
+                null,
+                14L
+        );
+        return Stream.of(body1, body2, body3, body4);
     }
 
     static Stream<CreateWordFlashcardRequest> invalidCreateWordFlashcardRequests() {
@@ -160,7 +178,7 @@ class WordFlashcardControllerTest {
                 new CreateWordFlashcardRequest(
                         "translation",
                         "targettargettargettargettargettargettargettargettargettargettargettargettargettar",
-                        null,
+                        PartOfSpeech.NOUN,
                         true,
                         "This is a translated example.",
                         "This is an example sentence.",
@@ -169,7 +187,7 @@ class WordFlashcardControllerTest {
                 new CreateWordFlashcardRequest(
                         "translation",
                         "target",
-                        null,
+                        PartOfSpeech.NOUN,
                         true,
                         "This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is aa.",
                         "This is an example sentence.",
@@ -178,28 +196,10 @@ class WordFlashcardControllerTest {
                 new CreateWordFlashcardRequest(
                         "translation",
                         "target",
-                        null,
+                        PartOfSpeech.NOUN,
                         true,
                         "This is a translated example.",
                         "This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is a translated example.This is aa.",
-                        14L
-                ),
-                new CreateWordFlashcardRequest(
-                        "translation",
-                        "target",
-                        null,
-                        true,
-                        null,
-                        "This is an example sentence.",
-                        14L
-                ),
-                new CreateWordFlashcardRequest(
-                        "translation",
-                        "target",
-                        null,
-                        true,
-                        "This is a translated example.",
-                        null,
                         14L
                 ),
                 new CreateWordFlashcardRequest(

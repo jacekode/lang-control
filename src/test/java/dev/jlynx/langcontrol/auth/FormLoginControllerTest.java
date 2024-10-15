@@ -17,6 +17,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.util.List;
 import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,7 +58,7 @@ class FormLoginControllerTest {
     @MethodSource("validRegisterRequests")
     void registerAccount_ShouldRegister_WhenRequestBodyIsValid(RegisterRequestBody validReqBody) throws Exception {
         // given
-        AccountOverviewResponse expectedResBody = new AccountOverviewResponse(12, "john", true, true);
+        AccountOverviewResponse expectedResBody = new AccountOverviewResponse(12, "john", true, true, List.of("ROLE_USER"));
         given(mockedAccountService.registerAccount(any(RegisterRequestBody.class))).willReturn(expectedResBody);
 
         // when, then

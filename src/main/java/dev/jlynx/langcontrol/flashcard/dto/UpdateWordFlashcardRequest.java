@@ -29,11 +29,9 @@ public record UpdateWordFlashcardRequest(
 
         boolean dynamicExamples,
 
-        @NotNull
         @Size(max = 300)
         String targetExample,
 
-        @NotNull
         @Size(max = 300)
         String translatedExample
 ) {}

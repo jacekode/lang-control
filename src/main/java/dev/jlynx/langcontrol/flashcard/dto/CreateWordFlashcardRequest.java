@@ -30,11 +30,9 @@ public record CreateWordFlashcardRequest(
         PartOfSpeech partOfSpeech,
         boolean dynamicExamples,
 
-        @NotNull
         @Size(max = 300)
         String translatedExample,
 
-        @NotNull
         @Size(max = 300)
         String targetExample,
 

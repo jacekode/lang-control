@@ -64,8 +64,8 @@ public class WordFlashcardServiceImpl implements WordFlashcardService {
                 .withTargetWord(body.targetWord())
                 .withDynamicExamples(body.dynamicExamples())
                 .withPos(body.partOfSpeech() == null ? PartOfSpeech.OTHER : body.partOfSpeech())
-                .withTargetExample(body.targetExample())
-                .withTranslatedExample(body.translatedExample())
+                .withTargetExample(body.targetExample() == null ? "" : body.targetExample())
+                .withTranslatedExample(body.translatedExample() == null ? "" : body.translatedExample())
                 .build();
         deck.addFlashcard(flashcardToCreate);
         wordFlashcardRepository.save(flashcardToCreate);
@@ -154,10 +154,10 @@ public class WordFlashcardServiceImpl implements WordFlashcardService {
                 cardId,
                 body.targetWord(),
                 body.translatedWord(),
-                body.partOfSpeech(),
+                body.partOfSpeech() == null ? PartOfSpeech.OTHER : body.partOfSpeech(),
                 body.dynamicExamples(),
-                body.targetExample(),
-                body.translatedExample()
+                body.targetExample() == null ? "" : body.targetExample(),
+                body.translatedExample() == null ? "" : body.translatedExample()
         );
     }
 
