@@ -88,8 +88,7 @@ public class WordFlashcardServiceImpl implements WordFlashcardService {
                 retrievedDeck.getSourceLang(),
                 body.partOfSpeech() == null ? PartOfSpeech.OTHER : body.partOfSpeech()
         ).stream()
-//                .distinct()
-                // todo: is the limit here necessary?
+                .distinct()
                 .limit(3)
                 .collect(Collectors.joining("; "));
 

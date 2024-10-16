@@ -22,7 +22,6 @@ public class WordFlashcardRepositoryCustomImpl implements WordFlashcardRepositor
         this.em = em;
     }
 
-    // todo: add the ORDER BY mechanism
     @Transactional
     @Override
     public List<WordFlashcard> findAllReadyForViewByDeck(
