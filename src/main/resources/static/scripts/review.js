@@ -2,6 +2,7 @@
 
 import { callApi, generateSentences, translateText } from "./modules/client.js";
 import { rsCompletedParam, rsErrorParam, RC_SKEY, RR_SKEY } from "./modules/constants.js";
+import { Duration, DurationUnit } from "./modules/utils.js";
 
 document.addEventListener("DOMContentLoaded", (e) => {
   resetContainerState();
@@ -73,17 +74,32 @@ function showIntervalForecasts(cardId, isInLearnMode) {
   callApi(`/cards/${cardId}/forecasts`)
     .then((body) => {
       if (isInLearnMode) {
-        document.querySelector("#dknow-forecast").textContent = body.forLearnDontKnow + " min";
-        document.querySelector("#know-forecast").textContent = body.forLearnKnow + " min";
+        document.querySelector("#dknow-forecast").textContent = formatInterval(body.forLearnDontKnow);
+        document.querySelector("#know-forecast").textContent = formatInterval(body.forLearnKnow);
       } else {
-        document.querySelector("#for-forecast").textContent = body.forReviewForgot + " min";
-        document.querySelector("#par-forecast").textContent = body.forReviewPartially + " min";
-        document.querySelector("#rem-forecast").textContent = body.forReviewRemember + " min";
+        document.querySelector("#for-forecast").textContent = formatInterval(body.forReviewForgot);
+        document.querySelector("#par-forecast").textContent = formatInterval(body.forReviewPartially);
+        document.querySelector("#rem-forecast").textContent = formatInterval(body.forReviewRemember);
       }
     })
     .catch((err) => {
       console.error(err);
     });
+}
+
+function formatInterval(intervalMinutes) {
+  // console.debug(`Interval minutes: ${intervalMinutes}`);
+  let duration = Duration.of(intervalMinutes, DurationUnit.MINUTE);
+  if (intervalMinutes < 60) {
+    const minutes = duration.convertTo(DurationUnit.MINUTE);
+    return `${minutes} min`;
+  }
+  if (intervalMinutes < 1440) {
+    const hours = duration.convertTo(DurationUnit.HOUR, 1);
+    return `${hours} h`;
+  }
+  const days = duration.convertTo(DurationUnit.DAY, 1);
+  return `${days} days`;
 }
 
 function postRating(cardId, rating) {
