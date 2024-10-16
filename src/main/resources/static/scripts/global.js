@@ -77,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // const authNavlinks = document.querySelectorAll(".auth-navlinks:not(#account-menu)");
   const authNavlinks = document.querySelectorAll(".auth-navlinks");
   const anonNavlinks = document.querySelectorAll(".anon-navlinks");
+  showHideAdminElements();
   if (sessionStorage.getItem(LOGGED_IN_SKEY) === "true") {
     anonNavlinks.forEach(elem => {
       elem.style.display = "none";
@@ -84,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     authNavlinks.forEach(elem => {
       elem.style.display = "block";
     });
-    showHideAdminElements();
   } else {
     anonNavlinks.forEach(elem => {
       elem.style.display = "block";
@@ -115,14 +115,17 @@ async function showHideAdminElements() {
   const adminNavlinks = document.querySelectorAll(".admin-navlink");
   const curAcc = await getCurrentAccount();
   console.debug(`Current account: ${JSON.stringify(curAcc)}`);
-  if (curAcc.roles.includes("ROLE_ADMIN")) {
+  if (sessionStorage.getItem(LOGGED_IN_SKEY) !== "true") {
+    for (const elem of adminNavlinks) {
+      elem.style.display = "none";
+    }
+  } else if (curAcc.roles.includes("ROLE_ADMIN")) {
     for (const elem of adminNavlinks) {
       elem.style.display = "block";
     }
   } else {
     for (const elem of adminNavlinks) {
       elem.style.display = "none";
-
     }
   }
 }
