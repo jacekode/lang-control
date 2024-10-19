@@ -2,12 +2,12 @@
 
 import { callApi } from "./modules/client.js";
 import { RC_SKEY, RR_SKEY, rsErrorParam } from "./modules/constants.js";
+import LanguageCode from './modules/language-code.js';
 
 class Deck {
 
   #rootDiv;
-  id;
-  name;
+  deckData;
   toReviewCount;
   totalCardsCount;
 
@@ -18,20 +18,19 @@ class Deck {
    * @param {number} toReviewCount
    * @param {number} totalCardsCount 
    */
-  constructor(id, name, toReviewCount, totalCardsCount) {
-    this.id = id;
-    this.name = name;
+  constructor(deckData, toReviewCount, totalCardsCount) {
+    this.deckData = deckData;
     this.toReviewCount = toReviewCount;
     this.totalCardsCount = totalCardsCount;
 
     this.#rootDiv = document.createElement("div");
     this.#rootDiv.classList.add("deck");
-    this.#rootDiv.dataset.deckId = this.id;
+    this.#rootDiv.dataset.deckId = this.deckData.id;
     
     const titlePara = document.createElement("p");
     this.#rootDiv.appendChild(titlePara);
     titlePara.classList.add("deck-title");
-    titlePara.textContent = this.name;
+    titlePara.textContent = this.deckData.name;
 
     const menuDiv = document.createElement("div");
     this.#rootDiv.appendChild(menuDiv);
@@ -39,17 +38,45 @@ class Deck {
 
     const editAnchor = document.createElement("a");
     menuDiv.appendChild(editAnchor);
-    editAnchor.href = `/decks/${this.id}/edit`;
+    editAnchor.href = `/decks/${this.deckData.id}/edit`;
     editAnchor.classList.add("edit-deck");
     editAnchor.textContent = "Edit";
 
-    const infoDiv = document.createElement("div");
-    this.#rootDiv.appendChild(infoDiv);
-    infoDiv.classList.add("deck-info");
+    const langInfoDiv = document.createElement("div");
+    this.#rootDiv.appendChild(langInfoDiv);
+    langInfoDiv.classList.add("deck-info");
+
+    const targetLangInfoPara = document.createElement("p");
+    langInfoDiv.appendChild(targetLangInfoPara);
+    langInfoDiv.classList.add("info-item");
+
+    const targetLangInfoText = document.createTextNode("Target: ");
+    langInfoDiv.appendChild(targetLangInfoText);
+
+    const targetLangSpan = document.createElement("span");
+    langInfoDiv.appendChild(targetLangSpan);
+    targetLangSpan.classList.add("target-lang");
+    targetLangSpan.textContent = new LanguageCode(this.deckData.targetLang).getLangName();
+
+    const sourceLangInfoPara = document.createElement("p");
+    langInfoDiv.appendChild(sourceLangInfoPara);
+    langInfoDiv.classList.add("info-item");
+
+    const sourceLangInfoText = document.createTextNode("Source: ");
+    langInfoDiv.appendChild(sourceLangInfoText);
+
+    const sourceLangSpan = document.createElement("span");
+    langInfoDiv.appendChild(sourceLangSpan);
+    sourceLangSpan.classList.add("source-lang");
+    sourceLangSpan.textContent = new LanguageCode(this.deckData.sourceLang).getLangName();
+
+    const statsInfoDiv = document.createElement("div");
+    this.#rootDiv.appendChild(statsInfoDiv);
+    statsInfoDiv.classList.add("deck-info");
 
     const reviewInfoPara = document.createElement("p");
-    infoDiv.appendChild(reviewInfoPara);
-    reviewInfoPara.classList.add("review-info");
+    statsInfoDiv.appendChild(reviewInfoPara);
+    reviewInfoPara.classList.add("info-item");
 
     const reviewInfoText = document.createTextNode("To review: ");
     reviewInfoPara.appendChild(reviewInfoText);
@@ -60,8 +87,8 @@ class Deck {
     reviewCountSpan.textContent = this.toReviewCount;
 
     const totalCardsInfoPara = document.createElement("p");
-    infoDiv.appendChild(totalCardsInfoPara);
-    totalCardsInfoPara.classList.add("total-cards-info");
+    statsInfoDiv.appendChild(totalCardsInfoPara);
+    totalCardsInfoPara.classList.add("info-item");
 
     const totalCardsInfoText = document.createTextNode("Total cards: ");
     totalCardsInfoPara.appendChild(totalCardsInfoText);
@@ -85,7 +112,7 @@ class Deck {
   #addEventReview(reviewBtn) {
     reviewBtn.addEventListener("click", (e) => {
       const urlParams = new URLSearchParams();
-      urlParams.append("deck", this.id);
+      urlParams.append("deck", this.deckData.id);
       const url = `/sr?${urlParams}`;
       console.debug(url);
       callApi(url)
@@ -110,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // console.debug(deckData);
           const details = await callApi(`/decks/${deckData.id}/details`);
           // console.debug(`Details: ${JSON.stringify(details)}`);
-          const deck = new Deck(deckData.id, deckData.name, details.readyForReview, details.totalCards);
+          const deck = new Deck(deckData, details.readyForReview, details.totalCards);
           deck.appendTo(document.querySelector("#deck-container"));
         }
         document.querySelector("#feedback-msg").textContent = "";

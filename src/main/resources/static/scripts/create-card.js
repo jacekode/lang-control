@@ -2,6 +2,7 @@
 
 import { formDataToJson, getSelectedOption } from "./modules/utils.js";
 import { callApi, generateSentences, translateText, lookupDictionary, getUserSettings } from "./modules/client.js";
+import LanguageCode from './modules/language-code.js';
 
 const dynExCheckbox = document.querySelector("#dynamic-examples");
 
@@ -20,8 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
         deckOption.dataset.sourceLang = deckData.sourceLang;
         if (!selected) {
           deckOption.selected = true;
-          document.getElementById("target-lang").textContent = deckData.targetLang;
-          document.getElementById("source-lang").textContent = deckData.sourceLang;
+          document.getElementById("target-lang").textContent = new LanguageCode(deckData.targetLang).getLangName();
+          document.getElementById("source-lang").textContent = new LanguageCode(deckData.sourceLang).getLangName();
           selected = true;
         }
       }
@@ -40,8 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
 const deckSelect = document.getElementById("deck-select");
 deckSelect.addEventListener("change", () => {
   const selectedOption = getSelectedOption("deck-select");
-  document.getElementById("target-lang").textContent = selectedOption.dataset.targetLang;
-  document.getElementById("source-lang").textContent = selectedOption.dataset.sourceLang;
+  document.getElementById("target-lang").textContent = new LanguageCode(selectedOption.dataset.targetLang).getLangName();
+  document.getElementById("source-lang").textContent = new LanguageCode(selectedOption.dataset.sourceLang).getLangName();
 });
 
 const createCardForm = document.querySelector("#create-card-form");

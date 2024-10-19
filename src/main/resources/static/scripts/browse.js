@@ -1,6 +1,7 @@
 "use strict";
 
 import { callApi } from "./modules/client.js";
+import LanguageCode from './modules/language-code.js';
 
 class CardRow {
 
@@ -31,11 +32,11 @@ class CardRow {
 
     const targetLangTd = document.createElement("td");
     this.#rootTr.appendChild(targetLangTd);
-    targetLangTd.textContent = cardData.targetLang;
+    targetLangTd.textContent = new LanguageCode(cardData.targetLang).getLangName();
 
     const sourceLangTd = document.createElement("td");
     this.#rootTr.appendChild(sourceLangTd);
-    sourceLangTd.textContent = cardData.sourceLang;
+    sourceLangTd.textContent = new LanguageCode(cardData.sourceLang).getLangName();
 
     const dynExamplesTd = document.createElement("td");
     this.#rootTr.appendChild(dynExamplesTd);

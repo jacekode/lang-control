@@ -3,7 +3,7 @@
 import { callApi, callApiExpectNoBody } from "./modules/client.js";
 import { formDataToJson } from "./modules/utils.js";
 import { errorParam } from "./modules/constants.js";
-
+import LanguageCode from './modules/language-code.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   const cardId = cardIdFromUrl();
@@ -71,8 +71,8 @@ function cardIdFromUrl() {
 }
 
 function fillCurrentData(cardData) {
-  document.getElementById("target-lang").textContent = cardData.targetLang;
-  document.getElementById("source-lang").textContent = cardData.sourceLang;
+  document.getElementById("target-lang").textContent = new LanguageCode(cardData.targetLang).getLangName();
+  document.getElementById("source-lang").textContent = new LanguageCode(cardData.sourceLang).getLangName();
   document.getElementById("target-word").value = cardData.targetWord;
   document.getElementById("target-word").dataset.origValue = cardData.targetWord;
   document.getElementById("translated-word").value = cardData.translatedWord;

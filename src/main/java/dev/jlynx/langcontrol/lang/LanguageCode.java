@@ -12,14 +12,30 @@ import java.util.Optional;
  */
 public enum LanguageCode {
 
-    ENGLISH("en", "English"), GERMAN("de", "German"), SPANISH("es", "Spanish"),
-    ITALIAN("it", "Italian"), FRENCH("fr", "French"), DUTCH("nl", "Dutch"),
-    CZECH("cs", "Czech"), UKRAINIAN("uk", "Ukrainian"), PORTUGUESE("pt", "Portuguese"),
-    DANISH("da", "Danish"), SWEDISH("sv", "Swedish"), POLISH("pl", "Polish"),
-    LATVIAN("lv", "Latvian"), LITHUANIAN("lt", "Lithuanian"), SLOVAK("sk", "Slovak"),
-    ESTONIAN("et",  "Estonian"), FINNISH("fi", "Finnish"), GREEK("el", "Greek"),
-    SLOVENIAN("sl", "Slovenian"), BULGARIAN("bg", "Bulgarian"), ROMANIAN("ro", "Romanian"),
-    TURKISH("tr", "Turkish"), HUNGARIAN("hu", "Hungarian"), INDONESIAN("id", "Indonesian");
+    ENGLISH("en", "English"),
+    GERMAN("de", "German"),
+    SPANISH("es", "Spanish"),
+    ITALIAN("it", "Italian"),
+    FRENCH("fr", "French"),
+    DUTCH("nl", "Dutch"),
+    CZECH("cs", "Czech"),
+    UKRAINIAN("uk", "Ukrainian"),
+    PORTUGUESE("pt", "Portuguese"),
+    DANISH("da", "Danish"),
+    SWEDISH("sv", "Swedish"),
+    POLISH("pl", "Polish"),
+    LATVIAN("lv", "Latvian"),
+    LITHUANIAN("lt", "Lithuanian"),
+    SLOVAK("sk", "Slovak"),
+    ESTONIAN("et",  "Estonian"),
+    FINNISH("fi", "Finnish"),
+    GREEK("el", "Greek"),
+    SLOVENIAN("sl", "Slovenian"),
+    BULGARIAN("bg", "Bulgarian"),
+    ROMANIAN("ro", "Romanian"),
+    TURKISH("tr", "Turkish"),
+    HUNGARIAN("hu", "Hungarian"),
+    INDONESIAN("id", "Indonesian");
 
     private static final Logger LOG = LoggerFactory.getLogger(LanguageCode.class);
 
