@@ -62,15 +62,15 @@
           <div class="feedback-msg"></div>
           <div>
             <label for="username">Username:</label>
-            <input type="text" name="username" id="username" required minlength="4" maxlength="30" placeholder="Username" autofocus>
+            <input type="text" name="username" id="username" required minlength="4" maxlength="30" pattern="^(?!\w*_{2,})\w*$" placeholder="Username" autofocus>
           </div>
           <div>
             <label for="fname">Your first name:</label>
-            <input type="text" name="firstName" id="fname" required maxlength="50" placeholder="First name">
+            <input type="text" name="firstName" id="fname" required maxlength="50" pattern="^[a-zA-Z]*$" placeholder="First name">
           </div>
           <div>
             <label for="pwd">Password:</label>
-            <input type="password" name="password" id="pwd" required minlength="8" maxlength="50" placeholder="Password">
+            <input type="password" name="password" id="pwd" required minlength="8" maxlength="50" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$" placeholder="Password">
           </div>
           <button type="submit" class="btn-primary">Register</button>
         </form>

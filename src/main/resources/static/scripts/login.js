@@ -10,6 +10,9 @@ if (queryParams.has("logout")) {
   document.querySelector("#login-form .feedback-msg").textContent = "Account has been deleted!";
 }
 
+/**
+ * @type {HTMLFormElement}
+ */
 const loginForm = document.querySelector("#login-form");
 
 loginForm.addEventListener("submit", async (e) => {
@@ -51,4 +54,28 @@ loginForm.addEventListener("submit", async (e) => {
           });
       }
     })
+});
+
+
+// LOGIN FORM VALIDATION
+const usernameInput = document.querySelector("#username");
+usernameInput.addEventListener("input", (e) => {
+  if (e.currentTarget.validity.valueMissing) {
+    e.currentTarget.setCustomValidity("The username is required.");
+  } else if (e.currentTarget.validity.tooShort || e.currentTarget.validity.tooLong) {
+    e.currentTarget.setCustomValidity("The username must be between 4 and 30 characters long.");
+  } else {
+    e.currentTarget.setCustomValidity("");
+  }
+});
+
+const pwdInput = document.querySelector("#pwd");
+pwdInput.addEventListener("input", (e) => {
+  if (e.currentTarget.validity.valueMissing) {
+    e.currentTarget.setCustomValidity("The password is required.");
+  } else if (e.currentTarget.validity.tooShort || e.currentTarget.validity.tooLong) {
+    e.currentTarget.setCustomValidity("The password must be between 8 and 50 characters.");
+  } else {
+    e.currentTarget.setCustomValidity("");
+  }
 });
