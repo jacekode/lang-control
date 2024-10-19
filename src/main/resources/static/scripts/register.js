@@ -24,6 +24,7 @@ registerForm.addEventListener("submit", async (e) => {
       // console.debug(`Response status: ${response.status}`);
       if (response.ok) {
         document.querySelector(".feedback-msg").textContent = "Account created successfully!";
+        registerForm.reset();
       } else if (response.status === 409) {
         document.querySelector(".feedback-msg").textContent = "The chosen username is already taken.";
       } else {
