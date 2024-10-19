@@ -4,6 +4,8 @@ import { callApi } from "./modules/client.js";
 import { RC_SKEY, RR_SKEY, rsErrorParam } from "./modules/constants.js";
 import LanguageCode from './modules/language-code.js';
 
+const feedbackMsg = document.querySelector("#feedback-msg");
+
 class Deck {
 
   #rootDiv;
@@ -140,10 +142,18 @@ document.addEventListener("DOMContentLoaded", () => {
           const deck = new Deck(deckData, details.readyForReview, details.totalCards);
           deck.appendTo(document.querySelector("#deck-container"));
         }
-        document.querySelector("#feedback-msg").textContent = "";
+        if (body.length == 0) {
+          feedbackMsg.textContent = "You currently don't have any decks. ";
+          const createDeckAnchor = document.createElement("a");
+          feedbackMsg.appendChild(createDeckAnchor);
+          createDeckAnchor.href = "/create/deck";
+          createDeckAnchor.textContent = "Create one.";
+        } else {
+          feedbackMsg.textContent = "";
+        }
       })
       .catch(error => {
-        document.querySelector("#feedback-msg").textContent = "An error has occurred while fetching decks.";
+        feedbackMsg.textContent = "An error has occurred while fetching decks.";
       });
 });
 

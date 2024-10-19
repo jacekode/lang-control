@@ -89,8 +89,13 @@ h2 {
   font-weight: 300;
 }
 
+a {
+  color: var(--primary-clr);
+}
+
 a:hover {
   cursor: pointer;
+  color: var(--secondary-clr)
 }
 
 button:hover:enabled {
