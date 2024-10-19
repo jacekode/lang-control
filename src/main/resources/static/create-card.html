@@ -72,14 +72,6 @@
           <label for="target-word">The target word (the one you're learning, in <span id="target-lang">...</span>):</label>
           <input type="text" name="targetWord" id="target-word" maxlength="80" autofocus>
         </div>
-        <button type="button" id="translate-btn" class="btn-primary">Translate target word</button>
-        <div>
-          <label for="translated-word">The word translation (in <span id="source-lang">...</span>):</label>
-          <input type="text" name="translatedWord" id="translated-word" maxlength="80">
-        </div>
-        <div id="dictionary-container">
-          <!-- <button type="button" class="dictionary-btn">Dummy btn</button> -->
-        </div>
         <div>
           <label for="pos-select">Part of speech:</label>
           <select name="partOfSpeech" id="pos-select">
@@ -90,6 +82,14 @@
             <option value="phrase" selected>Phrase</option>
             <option value="other">Other</option>
           </select>
+        </div>
+        <button type="button" id="translate-btn" class="btn-primary">Translate target word</button>
+        <div>
+          <label for="translated-word">The word translation (in <span id="source-lang">...</span>):</label>
+          <input type="text" name="translatedWord" id="translated-word" maxlength="80">
+        </div>
+        <div id="dictionary-container">
+          <!-- <button type="button" class="dictionary-btn">Dummy btn</button> -->
         </div>
         <div>
           <input type="checkbox" value="true" name="dynamicExamples" id="dynamic-examples">

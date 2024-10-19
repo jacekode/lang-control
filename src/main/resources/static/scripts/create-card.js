@@ -59,6 +59,7 @@ createCardForm.addEventListener("submit", (e) => {
     .then((resBody) => {
       // console.debug(resBody);
       document.querySelector("#feedback-msg").textContent = "Flashcard added successfully!";
+      document.querySelector("#dictionary-container").innerHTML = "";
       resetForm();
     })
     .catch(err => {
