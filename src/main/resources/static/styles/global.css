@@ -644,6 +644,11 @@ button[type="submit"] {
   margin-top: 20px;
 }
 
+.feedback-msg {
+  min-height: 1lh;
+  letter-spacing: -0.05em;
+}
+
 @media (min-width: 430px) {
   .form-container {
     padding: 30px 35px;

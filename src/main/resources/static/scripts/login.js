@@ -3,6 +3,15 @@
 import { LOGGED_IN_SKEY, CSRF_HEADER_NAME } from "./modules/constants.js";
 import { getCsrfToken } from "./modules/client.js";
 
+/**
+ * @type {HTMLFormElement}
+ */
+const loginForm = document.querySelector("#login-form");
+const feedbackMsg = document.querySelector(".feedback-msg");
+const usernameInput = document.querySelector("#username");
+const pwdInput = document.querySelector("#pwd");
+
+
 const queryParams = new URLSearchParams(window.location.search);
 if (queryParams.has("logout")) {
   document.querySelector("#login-form .feedback-msg").textContent = "You have logged out successfully!"
@@ -10,10 +19,6 @@ if (queryParams.has("logout")) {
   document.querySelector("#login-form .feedback-msg").textContent = "Account has been deleted!";
 }
 
-/**
- * @type {HTMLFormElement}
- */
-const loginForm = document.querySelector("#login-form");
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -59,24 +64,28 @@ loginForm.addEventListener("submit", async (e) => {
 
 
 // LOGIN FORM VALIDATION
-const usernameInput = document.querySelector("#username");
 usernameInput.addEventListener("input", (e) => {
   if (e.currentTarget.validity.valueMissing) {
     e.currentTarget.setCustomValidity("The username is required.");
+    feedbackMsg.textContent = "The username is required.";
   } else if (e.currentTarget.validity.tooShort || e.currentTarget.validity.tooLong) {
     e.currentTarget.setCustomValidity("The username must be between 4 and 30 characters long.");
+    feedbackMsg.textContent = "The username must be between 4 and 30 characters long.";
   } else {
     e.currentTarget.setCustomValidity("");
+    feedbackMsg.textContent = "";
   }
 });
 
-const pwdInput = document.querySelector("#pwd");
 pwdInput.addEventListener("input", (e) => {
   if (e.currentTarget.validity.valueMissing) {
     e.currentTarget.setCustomValidity("The password is required.");
+    feedbackMsg.textContent = "The password is required.";
   } else if (e.currentTarget.validity.tooShort || e.currentTarget.validity.tooLong) {
     e.currentTarget.setCustomValidity("The password must be between 8 and 50 characters.");
+    feedbackMsg.textContent = "The password must be between 8 and 50 characters.";
   } else {
     e.currentTarget.setCustomValidity("");
+    feedbackMsg.textContent = "";
   }
 });
