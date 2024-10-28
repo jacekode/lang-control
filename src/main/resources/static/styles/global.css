@@ -319,7 +319,7 @@ header {
 }
 
 #logo {
-  position: fixed;
+  position: absolute;
   top: 1.1rem;
   left: var(--nav-side-margin);
 }
