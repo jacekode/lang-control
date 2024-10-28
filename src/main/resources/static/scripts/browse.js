@@ -3,6 +3,13 @@
 import { callApi } from "./modules/client.js";
 import LanguageCode from './modules/language-code.js';
 
+let pageMetadata = {
+  curPage: 0,
+  pageSize: 10,
+  totalPages: 0,
+  totalElements: 0
+};
+
 class CardRow {
 
   #rootTr;
@@ -67,11 +74,14 @@ class CardRow {
   }
 }
 
+
 document.addEventListener("DOMContentLoaded", () => {
   const cardsTableTbody = document.querySelector("#cards-table tbody");
   let urlParams = new URLSearchParams();
   urlParams.append("sort", "created");
   urlParams.append("order", "desc");
+  urlParams.append("page", pageMetadata.curPage);
+  urlParams.append("size", pageMetadata.pageSize);
   const url = `/cards?${urlParams}`;
 
   callApi(url)
@@ -81,5 +91,55 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = new CardRow(deck);
         row.appendTo(cardsTableTbody);
       }
+      fillPageMetadata(body.page.number, body.page.totalPages, body.page.size, body.page.totalElements);
     });
+});
+
+function fillPageMetadata(curPage, totalPages, pageSize, totalElements) {
+  pageMetadata.curPage = curPage;
+  pageMetadata.totalPages = totalPages;
+  pageMetadata.pageSize = pageSize;
+  pageMetadata.totalElements = totalElements;
+  document.querySelector("#page-num").textContent = curPage+1;
+  document.querySelector("#total-pages").textContent = totalPages;
+  document.querySelector("#total-elements").textContent = totalElements;
+}
+
+const pageSizeInput = document.querySelector("#page-size-input");
+pageSizeInput.addEventListener("change", (e) => {
+  pageMetadata.pageSize = e.target.value;
+  replaceTableRows(0, pageMetadata.pageSize);
+});
+
+function replaceTableRows(curPage, pageSize) {
+  const cardsTableTbody = document.querySelector("#cards-table tbody");
+  cardsTableTbody.innerHTML = "";
+  let urlParams = new URLSearchParams();
+  urlParams.append("sort", "created");
+  urlParams.append("order", "desc");
+  urlParams.append("page", curPage);
+  urlParams.append("size", pageSize);
+  const url = `/cards?${urlParams}`;
+
+  callApi(url)
+    .then(body => {
+      // console.debug(body.content[0]);
+      for (const deck of body.content) {
+        const row = new CardRow(deck);
+        row.appendTo(cardsTableTbody);
+      }
+      fillPageMetadata(body.page.number, body.page.totalPages, body.page.size, body.page.totalElements);
+    });
+}
+
+const prevPageBtn = document.querySelector(".prev-page");
+prevPageBtn.addEventListener("click", (e) => {
+  const newPageNum = pageMetadata.curPage-1 < 0 ? 0 : pageMetadata.curPage-1;
+  replaceTableRows(newPageNum, pageMetadata.pageSize);
+});
+
+const nextPageBtn = document.querySelector(".next-page");
+nextPageBtn.addEventListener("click", (e) => {
+  const newPageNum = pageMetadata.curPage+1 < pageMetadata.totalPages ? pageMetadata.curPage+1 : pageMetadata.totalPages-1;
+  replaceTableRows(newPageNum, pageMetadata.pageSize);
 });

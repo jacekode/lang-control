@@ -17,6 +17,7 @@ const loginForm = document.querySelector("#login-form");
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  loginForm.reportValidity();
   const reqBody = new URLSearchParams(new FormData(loginForm));
   const csrfToken = await getCsrfToken();
   // console.debug(`Request body: ${reqBody}`);

@@ -939,6 +939,37 @@ caption {
 }
 
 
+/* || Table nav styling */
+.table-nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 10px 10px;
+}
+
+.page-size {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 5px;
+}
+
+.page-size * {
+  margin: unset;
+}
+
+#page-size-input {
+  max-width: 4em;
+  padding: 2px 5px;
+}
+
+.page-nav button {
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--primary-clr);
+}
+
+
 /* || Admin tools styling */
 .admin-table {
   border-color: var(--warning-clr);

@@ -45,7 +45,7 @@ public class WordFlashcardController {
             @RequestParam(name = "deck", required = false) @Positive Long deckId,
             @RequestParam(name = "page", required = false, defaultValue = "0") @PositiveOrZero int pageNum,
             @RequestParam(name = "size", required = false, defaultValue = "10") @Min(5) @Max(100) int pageSize,
-            @RequestParam(name = "sort", required = false) FlashcardSortBy sortBy,
+            @RequestParam(name = "sort", required = false, defaultValue = "created") FlashcardSortBy sortBy,
             @RequestParam(name = "order", required = false, defaultValue = "asc") SortOrder order
             ) {
         var cards = wordFlashcardService.getFlashcards(Optional.ofNullable(deckId), pageNum, pageSize, sortBy, order);
