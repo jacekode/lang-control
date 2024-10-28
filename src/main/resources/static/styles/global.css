@@ -175,6 +175,12 @@ button:disabled {
   color: inherit;
 }
 
+.admin-navlink,
+.anon-navlinks,
+.auth-navlinks {
+  display: none;
+}
+
 main {
   margin-top: var(--nav-height);
   max-width: 1200px;
