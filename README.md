@@ -4,6 +4,9 @@ LangControl is a language learning web app that uses flashcards to help you lear
 It was developed out of a need to make flashcards a lot less boring and more relevant to real life than they usually are.
 It puts simplicity and ease of use at the forefront.
 
+## ✨ Live demo app ✨
+Feel free to check out the [live demo of the application](https://www.langcontrol.jlynx.dev).
+
 ## Main features
 
 * Automatic translations
