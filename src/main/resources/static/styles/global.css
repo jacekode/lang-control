@@ -668,7 +668,7 @@ button[type="submit"] {
 
 /* || Auth styling */
 .auth-form {
-  max-width: 25rem;
+  max-width: 20rem;
   background-image: var(--form-gradient);
 }
 
