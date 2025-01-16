@@ -14,7 +14,7 @@ const feedbackMsg = document.querySelector(".feedback-msg");
 
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  loginForm.reportValidity();
+  registerForm.reportValidity();
   const reqBody = formDataToJson(registerForm);
   const csrfToken = await getCsrfToken();
   // console.debug(`Request body: ${reqBody}`);
